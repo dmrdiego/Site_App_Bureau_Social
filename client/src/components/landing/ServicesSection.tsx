@@ -1,59 +1,103 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, TrendingUp, HandshakeIcon, GraduationCap } from "lucide-react";
+import { BookOpen, TrendingUp, HandshakeIcon, GraduationCap, Briefcase, Network, Wrench } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
-const services = [
+const iconMap: Record<string, any> = {
+  "book-open": BookOpen,
+  "trending-up": TrendingUp,
+  handshake: HandshakeIcon,
+  "graduation-cap": GraduationCap,
+  briefcase: Briefcase,
+  network: Network,
+  tools: Wrench,
+};
+
+interface Service {
+  title: string;
+  description: string;
+  icon: string;
+  features?: string[];
+}
+
+interface ServicesContent {
+  title: string;
+  description: string;
+  services: Service[];
+}
+
+const defaultServices: Service[] = [
   {
-    icon: BookOpen,
-    title: "Consultoria Estratégica",
-    description: "Apoio especializado no desenvolvimento de modelos de negócio social sustentáveis e escaláveis.",
+    icon: "briefcase",
+    title: "Consultoria e Mentoria",
+    description: "Acompanhamento especializado para desenvolvimento e escala de negócios sociais",
+    features: ["Modelação de negócio", "Estratégia de impacto", "Planeamento financeiro"],
   },
   {
-    icon: TrendingUp,
-    title: "Aceleração de Projetos",
-    description: "Programas de mentoria e capacitação para empreendedores sociais em crescimento.",
+    icon: "graduation-cap",
+    title: "Formação",
+    description: "Programas de capacitação em empreendedorismo social e gestão de impacto",
+    features: ["Workshops temáticos", "Cursos de certificação", "Webinars especializados"],
   },
   {
-    icon: HandshakeIcon,
-    title: "Networking & Parcerias",
-    description: "Conexões estratégicas com investidores, parceiros corporativos e organizações do setor.",
+    icon: "network",
+    title: "Networking",
+    description: "Facilitação de contactos e parcerias estratégicas no ecossistema",
+    features: ["Eventos de networking", "Matchmaking com investidores", "Parcerias corporativas"],
   },
   {
-    icon: GraduationCap,
-    title: "Formação Contínua",
-    description: "Workshops, webinars e cursos sobre empreendedorismo social e impacto mensurável.",
+    icon: "tools",
+    title: "Recursos e Ferramentas",
+    description: "Acesso a recursos, templates e ferramentas para gestão de negócios sociais",
+    features: ["Biblioteca de recursos", "Templates e modelos", "Base de conhecimento"],
   },
 ];
 
 export function ServicesSection() {
+  const { data } = useQuery<{ content: ServicesContent }>({
+    queryKey: ['/api/public/cms/services'],
+  });
+
+  const content = data?.content;
+  const services = content?.services || defaultServices;
+
   return (
     <section id="servicos" className="py-24 md:py-32 bg-muted/30">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Como Podemos Ajudar
+            {content?.title || "Os Nossos Serviços"}
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Oferecemos um conjunto abrangente de serviços para apoiar 
-            negócios sociais em todas as fases do seu desenvolvimento.
+            {content?.description || "Apoiamos negócios sociais em todas as fases do seu desenvolvimento."}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.map((service, index) => (
-            <Card key={index} className="hover-elevate active-elevate-2 transition-all duration-200">
-              <CardHeader>
-                <div className="w-14 h-14 bg-primary rounded-md flex items-center justify-center mb-4">
-                  <service.icon className="h-7 w-7 text-primary-foreground" />
-                </div>
-                <CardTitle className="text-xl">{service.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  {service.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="grid md:grid-cols-2 gap-8">
+          {services.map((service, index) => {
+            const Icon = iconMap[service.icon] || Briefcase;
+            return (
+              <Card key={index} className="hover-elevate active-elevate-2 transition-all duration-200">
+                <CardHeader>
+                  <div className="w-14 h-14 bg-primary rounded-md flex items-center justify-center mb-4">
+                    <Icon className="h-7 w-7 text-primary-foreground" />
+                  </div>
+                  <CardTitle className="text-xl">{service.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed mb-4">
+                    {service.description}
+                  </p>
+                  {service.features && service.features.length > 0 && (
+                    <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                      {service.features.map((feature, i) => (
+                        <li key={i}>{feature}</li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </section>

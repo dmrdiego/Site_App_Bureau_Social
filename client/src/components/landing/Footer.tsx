@@ -1,7 +1,46 @@
 import { Link } from "wouter";
-import { Mail, Phone, MapPin, Linkedin, Facebook, Twitter } from "lucide-react";
+import { Mail, Phone, MapPin, Linkedin, Facebook, Twitter, Instagram } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+
+interface ContactContent {
+  email: string;
+  phone: string;
+  address: {
+    street: string;
+    city: string;
+    postalCode: string;
+  };
+  social: {
+    facebook?: string;
+    linkedin?: string;
+    twitter?: string;
+    instagram?: string;
+  };
+}
+
+const defaultContact: ContactContent = {
+  email: "geral@bureausocial.pt",
+  phone: "+351 21 XXX XXXX",
+  address: {
+    street: "Rua do Impacto Social, 123",
+    city: "Lisboa",
+    postalCode: "1000-001",
+  },
+  social: {
+    facebook: "https://facebook.com/bureausocial",
+    linkedin: "https://linkedin.com/company/bureau-social",
+    twitter: "https://twitter.com/bureausocial",
+    instagram: "https://instagram.com/bureausocial",
+  },
+};
 
 export function Footer() {
+  const { data } = useQuery<{ content: ContactContent }>({
+    queryKey: ['/api/public/cms/contact'],
+  });
+
+  const contact = data?.content || defaultContact;
+
   return (
     <footer id="contactos" className="bg-secondary text-secondary-foreground">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -14,33 +53,50 @@ export function Footer() {
               social e o desenvolvimento sustentável em Portugal.
             </p>
             <div className="flex gap-3">
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-md bg-secondary-foreground/10 flex items-center justify-center hover-elevate active-elevate-2"
-                data-testid="link-linkedin"
-              >
-                <Linkedin className="h-5 w-5" />
-              </a>
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-md bg-secondary-foreground/10 flex items-center justify-center hover-elevate active-elevate-2"
-                data-testid="link-facebook"
-              >
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-md bg-secondary-foreground/10 flex items-center justify-center hover-elevate active-elevate-2"
-                data-testid="link-twitter"
-              >
-                <Twitter className="h-5 w-5" />
-              </a>
+              {contact.social.linkedin && (
+                <a
+                  href={contact.social.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-md bg-secondary-foreground/10 flex items-center justify-center hover-elevate active-elevate-2"
+                  data-testid="link-linkedin"
+                >
+                  <Linkedin className="h-5 w-5" />
+                </a>
+              )}
+              {contact.social.facebook && (
+                <a
+                  href={contact.social.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-md bg-secondary-foreground/10 flex items-center justify-center hover-elevate active-elevate-2"
+                  data-testid="link-facebook"
+                >
+                  <Facebook className="h-5 w-5" />
+                </a>
+              )}
+              {contact.social.twitter && (
+                <a
+                  href={contact.social.twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-md bg-secondary-foreground/10 flex items-center justify-center hover-elevate active-elevate-2"
+                  data-testid="link-twitter"
+                >
+                  <Twitter className="h-5 w-5" />
+                </a>
+              )}
+              {contact.social.instagram && (
+                <a
+                  href={contact.social.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-md bg-secondary-foreground/10 flex items-center justify-center hover-elevate active-elevate-2"
+                  data-testid="link-instagram"
+                >
+                  <Instagram className="h-5 w-5" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -80,22 +136,22 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-secondary-foreground/80">
                 <Mail className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                <a href="mailto:info@bureausocial.pt" className="hover:text-secondary-foreground transition-colors">
-                  info@bureausocial.pt
+                <a href={`mailto:${contact.email}`} className="hover:text-secondary-foreground transition-colors">
+                  {contact.email}
                 </a>
               </li>
               <li className="flex items-start gap-3 text-secondary-foreground/80">
                 <Phone className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                <a href="tel:+351210000000" className="hover:text-secondary-foreground transition-colors">
-                  +351 210 000 000
+                <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="hover:text-secondary-foreground transition-colors">
+                  {contact.phone}
                 </a>
               </li>
               <li className="flex items-start gap-3 text-secondary-foreground/80">
                 <MapPin className="h-5 w-5 flex-shrink-0 mt-0.5" />
                 <span>
-                  Av. da Liberdade, 123
+                  {contact.address.street}
                   <br />
-                  1250-096 Lisboa
+                  {contact.address.postalCode} {contact.address.city}
                 </span>
               </li>
             </ul>

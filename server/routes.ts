@@ -550,6 +550,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CMS CONTENT
   // ============================================================================
 
+  // Public CMS endpoint for landing page (no auth required)
+  app.get("/api/public/cms/:sectionKey", async (req: Request, res: Response) => {
+    try {
+      const { sectionKey } = req.params;
+      const content = await storage.getCmsContent(sectionKey);
+
+      if (!content) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+
+      res.json(content);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch CMS content" });
+    }
+  });
+
+  // Private CMS endpoint for authenticated users
   app.get("/api/cms/:sectionKey", requireAuth, async (req: Request, res: Response) => {
     try {
       const { sectionKey } = req.params;
