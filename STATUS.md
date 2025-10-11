@@ -38,10 +38,13 @@
 
 **Descrição**: Publicar aplicação no Replit para testar fluxo completo de autenticação em ambiente real, já que OIDC não funciona em desenvolvimento.
 
-**💰 Custo Estimado**:
-- **Base**: $1/mês
-- **Uso estimado**: ~$3/mês (75,000 requests)
-- **Com Replit Core**: Coberto pelos $25/mês em créditos (sem custo adicional)
+**💰 Custo Estimado (Autoscale Deployment)**:
+- **Taxa base**: $1/mês
+- **Compute**: $3.20 por milhão de unidades
+- **Requests**: $1.20 por milhão de requests
+- **Uso típico estimado**: ~$3/mês total (75,000 requests/mês)
+- **Com Replit Core ($20/mês)**: Inclui $25/mês em créditos → **sem custo adicional**
+- 📖 [Documentação Oficial de Preços](https://docs.replit.com/deployments/pricing)
 
 **⚠️ IMPORTANTE**: 
 - O botão "Portal Associados" **não funciona em desenvolvimento** (erro 404/500)
