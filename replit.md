@@ -34,6 +34,23 @@ Complete web application for Instituto Português de Negócios Sociais - Bureau 
 - File upload via multer with direct storage integration
 - Object entity tracking for uploaded documents
 
+### ✅ Task 4: Document Seeding - COMPLETED (October 11, 2025)
+- **30 Institutional Documents Seeded**: Extracted from ZIP archives and organized
+- **10 Document Categories**:
+  - Parcerias (8): Cartas de apresentação, propostas, termos de cooperação, fichas de adesão
+  - Políticas (5): RGPD, RH, conflito de interesses, compras/contratações, código de conduta
+  - Planos (5): Estratégico 2026-2028, atividades, captação de recursos, comunicação, voluntariado
+  - Regulamentos (4): Interno, eleitoral, quotas, utilização de instalações
+  - Manuais (2): Manual do associado, procedimentos administrativos/financeiros
+  - Fichas (2): Candidatura e termo de adesão de associado
+  - Atas (1): Ata de constituição
+  - Apresentações (1): Apresentação institucional
+  - Orçamentos (1): Orçamento 2026
+  - Relatórios (1): Modelo de relatório de atividades e contas
+- **File Storage**: Documents stored in `public/documents/` directory
+- **Database Records**: All 30 documents registered in `documents` table with proper categorization
+- **Download System**: Enhanced document download endpoint to serve both local files and object storage files
+
 ## User Preferences
 
 - Language: Portuguese (Portugal)

@@ -471,9 +471,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Serve from local file system (for seeded documents)
         const fs = await import('fs');
         const path = await import('path');
-        const filePath = path.join(process.cwd(), 'public', document.filePath);
         
-        if (!fs.existsSync(filePath)) {
+        // Security: Normalize and validate path to prevent traversal attacks
+        const publicDir = path.join(process.cwd(), 'public');
+        // Remove leading slash to prevent path.join from treating it as absolute
+        const relativePath = document.filePath.replace(/^\/+/, '');
+        const requestedPath = path.join(publicDir, relativePath);
+        const resolvedPath = path.resolve(requestedPath);
+        
+        // Ensure the resolved path is still within the public directory
+        if (!resolvedPath.startsWith(publicDir)) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        if (!fs.existsSync(resolvedPath)) {
           return res.status(404).json({ message: "File not found" });
         }
         
@@ -483,7 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         res.setHeader('Content-Type', mimeType);
         res.setHeader('Content-Disposition', `attachment; filename="${document.titulo}.${document.tipo}"`);
-        return res.sendFile(filePath);
+        return res.sendFile(resolvedPath);
       }
 
       // Otherwise, try object storage
