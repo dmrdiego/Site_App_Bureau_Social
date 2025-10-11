@@ -466,7 +466,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Document not found" });
       }
 
-      // Initialize object storage client
+      // Check if it's a local file path (starts with /documents/)
+      if (document.filePath.startsWith('/documents/')) {
+        // Serve from local file system (for seeded documents)
+        const fs = await import('fs');
+        const path = await import('path');
+        const filePath = path.join(process.cwd(), 'public', document.filePath);
+        
+        if (!fs.existsSync(filePath)) {
+          return res.status(404).json({ message: "File not found" });
+        }
+        
+        const mimeType = document.tipo === 'pdf' 
+          ? 'application/pdf' 
+          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${document.titulo}.${document.tipo}"`);
+        return res.sendFile(filePath);
+      }
+
+      // Otherwise, try object storage
       const objStorage = new Client();
       
       // Get file from object storage
