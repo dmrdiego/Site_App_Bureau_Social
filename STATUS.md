@@ -32,14 +32,25 @@
 ---
 
 ### 1️⃣ Deploy para Produção e Testes OIDC
-**Status**: 🔴 To Do  
+**Status**: 🟡 In Progress  
 **Prioridade**: 🔥 Alta  
 **Estimativa**: 2-3 horas  
 
 **Descrição**: Publicar aplicação no Replit para testar fluxo completo de autenticação em ambiente real, já que OIDC não funciona em desenvolvimento.
 
+**💰 Custo Estimado**:
+- **Base**: $1/mês
+- **Uso estimado**: ~$3/mês (75,000 requests)
+- **Com Replit Core**: Coberto pelos $25/mês em créditos (sem custo adicional)
+
+**⚠️ IMPORTANTE**: 
+- O botão "Portal Associados" **não funciona em desenvolvimento** (erro 404/500)
+- Isto é **comportamento normal**: OIDC só funciona em produção
+- Após deploy, o login funcionará perfeitamente
+
 **Tarefas**:
-- [ ] Verificar variáveis de ambiente (DATABASE_URL, SESSION_SECRET)
+- [x] Verificar variáveis de ambiente (DATABASE_URL, SESSION_SECRET) ✓
+- [x] Build frontend sem erros ✓
 - [ ] Fazer deploy via botão "Publish"
 - [ ] Testar login/logout em produção
 - [ ] Verificar criação automática de utilizadores
