@@ -4,6 +4,8 @@ import { createServer, type Server } from "http";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import * as oidc from "openid-client";
+import multer from "multer";
+import { getClient } from "@replit/object-storage";
 import { storage } from "./storage";
 import type { User } from "@shared/schema";
 import {
@@ -13,6 +15,14 @@ import {
   insertDocumentSchema,
   insertCmsContentSchema,
 } from "@shared/schema";
+
+// Setup multer for file uploads (memory storage)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+});
 
 const MemoryStore = createMemoryStore(session);
 
@@ -383,6 +393,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(document);
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Failed to create document" });
+    }
+  });
+
+  // Upload document file
+  app.post("/api/documents/upload", requireAdmin, upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const { titulo, tipo, categoria, assemblyId, visivelPara } = req.body;
+      
+      if (!titulo || !tipo) {
+        return res.status(400).json({ message: "Título and tipo are required" });
+      }
+
+      // Initialize object storage client
+      const objStorage = getClient();
+      
+      // Generate unique filename
+      const timestamp = Date.now();
+      const sanitizedFilename = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const objectPath = `/replit-objstore-${process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID}/.private/documents/${timestamp}-${sanitizedFilename}`;
+
+      // Upload file to object storage
+      await objStorage.uploadFromBytes(objectPath, req.file.buffer);
+
+      // Create object entity record
+      await storage.createObjectEntity({
+        objectPath,
+        owner: req.session.userId,
+        visibility: 'private',
+        metadata: {
+          originalName: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        },
+      });
+
+      // Create document record
+      const document = await storage.createDocument({
+        titulo,
+        tipo,
+        categoria: categoria || null,
+        assemblyId: assemblyId ? parseInt(assemblyId) : null,
+        filePath: objectPath,
+        fileSize: req.file.size,
+        visivelPara: visivelPara || 'todos',
+        uploadedBy: req.session.userId,
+      });
+
+      res.status(201).json(document);
+    } catch (error: any) {
+      console.error("Document upload error:", error);
+      res.status(500).json({ message: error.message || "Failed to upload document" });
+    }
+  });
+
+  // Download document
+  app.get("/api/documents/:id/download", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const document = await storage.getDocumentById(id);
+
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Initialize object storage client
+      const objStorage = getClient();
+      
+      // Get file from object storage
+      const fileBuffer = await objStorage.downloadAsBytes(document.filePath);
+      
+      // Get file metadata for mime type
+      const objectEntity = await storage.getObjectEntity(document.filePath);
+      const mimeType = (objectEntity?.metadata as any)?.mimeType || 'application/octet-stream';
+
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${document.titulo}"`);
+      res.send(Buffer.from(fileBuffer));
+    } catch (error: any) {
+      console.error("Document download error:", error);
+      res.status(500).json({ message: "Failed to download document" });
     }
   });
 

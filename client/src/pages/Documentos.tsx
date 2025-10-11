@@ -1,17 +1,35 @@
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Download, Upload } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { FileText, Download, Upload, X } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 import type { Document as Doc } from "@shared/schema";
 
 export default function Documentos() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading, isAdmin, isDirecao } = useAuth();
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -54,7 +72,10 @@ export default function Documentos() {
           </p>
         </div>
         {canUpload && (
-          <Button data-testid="button-upload-documento">
+          <Button 
+            onClick={() => setUploadDialogOpen(true)}
+            data-testid="button-upload-documento"
+          >
             <Upload className="h-4 w-4 mr-2" />
             Upload Documento
           </Button>
@@ -94,13 +115,20 @@ export default function Documentos() {
           </CardContent>
         </Card>
       )}
+
+      {canUpload && (
+        <UploadDialog 
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+        />
+      )}
     </div>
   );
 }
 
 function DocumentCard({ document }: { document: Doc }) {
   const handleDownload = () => {
-    window.open(document.filePath, '_blank');
+    window.open(`/api/documents/${document.id}/download`, '_blank');
   };
 
   const formatFileSize = (bytes: number | null) => {
@@ -152,6 +180,224 @@ function DocumentCard({ document }: { document: Doc }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [titulo, setTitulo] = useState("");
+  const [tipo, setTipo] = useState<string>("ata");
+  const [categoria, setCategoria] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+
+  const uploadMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedFile) throw new Error("Nenhum ficheiro selecionado");
+      
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('titulo', titulo);
+      formData.append('tipo', tipo);
+      if (categoria) formData.append('categoria', categoria);
+
+      const response = await fetch('/api/documents/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Upload failed');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/documents'] });
+      toast({
+        title: "Sucesso",
+        description: "Documento carregado com sucesso!",
+      });
+      handleClose();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleClose = () => {
+    setSelectedFile(null);
+    setTitulo("");
+    setTipo("ata");
+    setCategoria("");
+    onOpenChange(false);
+  };
+
+  const handleFileSelect = (file: File) => {
+    setSelectedFile(file);
+    if (!titulo) {
+      setTitulo(file.name.replace(/\.[^/.]+$/, ""));
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFileSelect(files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleSubmit = () => {
+    if (!selectedFile || !titulo || !tipo) {
+      toast({
+        title: "Erro",
+        description: "Por favor preencha todos os campos obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+    uploadMutation.mutate();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Upload de Documento</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* File Drop Zone */}
+          <div
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              isDragging ? 'border-primary bg-primary/5' : 'border-border'
+            }`}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => fileInputRef.current?.click()}
+            style={{ cursor: 'pointer' }}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept=".pdf,.doc,.docx,.txt"
+              onChange={(e) => {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                  handleFileSelect(files[0]);
+                }
+              }}
+            />
+            
+            {selectedFile ? (
+              <div className="flex items-center justify-center gap-3">
+                <FileText className="h-8 w-8 text-primary" />
+                <div className="text-left">
+                  <p className="font-medium">{selectedFile.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedFile(null);
+                  }}
+                  data-testid="button-remove-file"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-sm font-medium mb-1">
+                  Clique ou arraste para selecionar ficheiro
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  PDF, DOC, DOCX ou TXT (máx. 10MB)
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Form Fields */}
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="titulo">Título *</Label>
+              <Input
+                id="titulo"
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+                placeholder="Nome do documento"
+                data-testid="input-titulo"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="tipo">Tipo *</Label>
+              <Select value={tipo} onValueChange={setTipo}>
+                <SelectTrigger id="tipo" data-testid="select-tipo">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ata">Ata</SelectItem>
+                  <SelectItem value="regulamento">Regulamento</SelectItem>
+                  <SelectItem value="relatorio">Relatório</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="categoria">Categoria (opcional)</Label>
+              <Input
+                id="categoria"
+                value={categoria}
+                onChange={(e) => setCategoria(e.target.value)}
+                placeholder="Ex: Assembleia Geral 2024"
+                data-testid="input-categoria"
+              />
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose} data-testid="button-cancel">
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!selectedFile || !titulo || uploadMutation.isPending}
+            data-testid="button-upload"
+          >
+            {uploadMutation.isPending ? "A carregar..." : "Upload"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
