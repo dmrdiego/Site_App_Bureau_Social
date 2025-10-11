@@ -470,6 +470,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // PRESENCES (Assembly attendance)
+  // ============================================================================
+
+  app.get("/api/assemblies/:id/presences", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const assemblyId = parseInt(req.params.id);
+      const presences = await storage.getPresencesByAssembly(assemblyId);
+      res.json(presences);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch presences" });
+    }
+  });
+
+  app.post("/api/assemblies/:id/presences", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const assemblyId = parseInt(req.params.id);
+      
+      // Validate assembly exists
+      const assembly = await storage.getAssemblyById(assemblyId);
+      if (!assembly) {
+        return res.status(404).json({ message: "Assembly not found" });
+      }
+
+      // Check if already confirmed
+      const existingPresences = await storage.getPresencesByAssembly(assemblyId);
+      const alreadyConfirmed = existingPresences.find(p => p.userId === req.session.userId);
+      
+      if (alreadyConfirmed) {
+        return res.status(400).json({ message: "Presence already confirmed" });
+      }
+
+      const presence = await storage.createPresence({
+        assemblyId,
+        userId: req.session.userId!,
+        presente: true,
+        confirmadoEm: new Date(),
+      });
+
+      res.status(201).json(presence);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to confirm presence" });
+    }
+  });
+
+  // ============================================================================
+  // MINUTES GENERATION (Atas)
+  // ============================================================================
+
+  app.post("/api/assemblies/:id/generate-minutes", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const assemblyId = parseInt(req.params.id);
+      const assembly = await storage.getAssemblyById(assemblyId);
+
+      if (!assembly) {
+        return res.status(404).json({ message: "Assembly not found" });
+      }
+
+      // Get all related data
+      const presences = await storage.getPresencesByAssembly(assemblyId);
+      const votingItems = await storage.getVotingItemsByAssembly(assemblyId);
+
+      // Resolve user details for attendees
+      const attendeesWithDetails = await Promise.all(
+        presences
+          .filter(p => p.presente)
+          .map(async (p) => {
+            const user = await storage.getUser(p.userId);
+            return {
+              userId: p.userId,
+              name: user ? `${user.firstName} ${user.lastName}` : p.userId,
+              email: user?.email || '',
+              role: user?.role || 'associado',
+            };
+          })
+      );
+
+      // Get vote results for each voting item
+      const votingResults = await Promise.all(
+        votingItems.map(async (item) => {
+          const votes = await storage.getVotesByVotingItem(item.id!);
+          const results = votes.reduce((acc, vote) => {
+            const voto = vote.voto.toLowerCase();
+            acc[voto] = (acc[voto] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+          
+          return {
+            item,
+            results,
+            totalVotes: votes.length,
+          };
+        })
+      );
+
+      // Generate basic minutes text with participant names
+      const minutesText = `
+ATA DA ASSEMBLEIA ${assembly.tipo.toUpperCase()}
+${assembly.titulo}
+
+Data: ${new Date(assembly.dataAssembleia).toLocaleDateString('pt-PT', { 
+  weekday: 'long', 
+  year: 'numeric', 
+  month: 'long', 
+  day: 'numeric' 
+})}
+Local: ${assembly.local || 'Não especificado'}
+
+PRESENÇAS (${attendeesWithDetails.length}):
+${attendeesWithDetails.map(a => `- ${a.name} (${a.email}) - ${a.role}`).join('\n')}
+
+ORDEM DE TRABALHOS:
+${assembly.ordemDia || 'Não especificada'}
+
+VOTAÇÕES REALIZADAS:
+${votingResults.map((vr, index) => `
+${index + 1}. ${vr.item.titulo}
+   Descrição: ${vr.item.descricao}
+   Resultados:
+   - Aprovar: ${vr.results.aprovar || 0}
+   - Rejeitar: ${vr.results.rejeitar || 0}
+   - Abstenção: ${vr.results.abstencao || 0}
+   Total de votos: ${vr.totalVotes}
+`).join('\n')}
+
+Ata gerada automaticamente pelo sistema Bureau Social.
+`;
+
+      // Create document for the minutes
+      const document = await storage.createDocument({
+        titulo: `Ata - ${assembly.titulo}`,
+        tipo: 'ata',
+        assemblyId,
+        conteudo: minutesText,
+        uploadedBy: req.session.userId,
+      });
+
+      // Mark assembly as having minutes
+      await storage.updateAssembly(assemblyId, {
+        ataGerada: true,
+      });
+
+      res.json({ 
+        success: true, 
+        document,
+        minutesText 
+      });
+    } catch (error) {
+      console.error("Minutes generation error:", error);
+      res.status(500).json({ message: "Failed to generate minutes" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
