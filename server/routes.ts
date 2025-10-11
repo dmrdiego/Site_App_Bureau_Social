@@ -5,7 +5,7 @@ import session from "express-session";
 import createMemoryStore from "memorystore";
 import * as oidc from "openid-client";
 import multer from "multer";
-import { getClient } from "@replit/object-storage";
+import { Client } from "@replit/object-storage";
 import { storage } from "./storage";
 import type { User } from "@shared/schema";
 import {
@@ -410,15 +410,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Initialize object storage client
-      const objStorage = getClient();
+      const objStorage = new Client();
       
       // Generate unique filename
       const timestamp = Date.now();
       const sanitizedFilename = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const objectPath = `/replit-objstore-${process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID}/.private/documents/${timestamp}-${sanitizedFilename}`;
+      const privateDir = process.env.PRIVATE_OBJECT_DIR || '/.private';
+      const objectPath = `${privateDir}/documents/${timestamp}-${sanitizedFilename}`;
 
       // Upload file to object storage
-      await objStorage.uploadFromBytes(objectPath, req.file.buffer);
+      const uploadResult = await objStorage.uploadFromBytes(objectPath, req.file.buffer);
+      
+      if (!uploadResult.ok) {
+        throw new Error(`Upload failed: ${uploadResult.error}`);
+      }
 
       // Create object entity record
       await storage.createObjectEntity({
@@ -462,18 +467,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Initialize object storage client
-      const objStorage = getClient();
+      const objStorage = new Client();
       
       // Get file from object storage
-      const fileBuffer = await objStorage.downloadAsBytes(document.filePath);
+      const downloadResult = await objStorage.downloadAsBytes(document.filePath);
+      
+      if (!downloadResult.ok) {
+        return res.status(404).json({ message: "File not found in storage" });
+      }
       
       // Get file metadata for mime type
       const objectEntity = await storage.getObjectEntity(document.filePath);
       const mimeType = (objectEntity?.metadata as any)?.mimeType || 'application/octet-stream';
 
+      // downloadAsBytes returns [Buffer] tuple, destructure to get the actual buffer
+      const [fileBytes] = downloadResult.value;
+
       res.setHeader('Content-Type', mimeType);
       res.setHeader('Content-Disposition', `attachment; filename="${document.titulo}"`);
-      res.send(Buffer.from(fileBuffer));
+      res.send(fileBytes);
     } catch (error: any) {
       console.error("Document download error:", error);
       res.status(500).json({ message: "Failed to download document" });

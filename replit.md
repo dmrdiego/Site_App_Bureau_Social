@@ -27,9 +27,12 @@ Complete web application for Instituto Português de Negócios Sociais - Bureau 
   - Vote aggregation for results
 - **Session Management**: express-session with MemoryStore, secure cookies
 
-### 🔄 Task 3: Integration, Polish & Testing - IN PROGRESS
+### ✅ Task 3: Integration, Polish & Testing - COMPLETED
 - Frontend-backend integration complete with TanStack Query
 - Testing authentication flows, voting system, assembly management
+- Document upload system with Replit Object Storage (@replit/object-storage)
+- File upload via multer with direct storage integration
+- Object entity tracking for uploaded documents
 
 ## User Preferences
 
@@ -116,6 +119,7 @@ Complete web application for Instituto Português de Negócios Sociais - Bureau 
 - Presence tracking
 - Notifications
 - CMS content
+- Object entity tracking (for uploaded files)
 
 ### API Routes (server/routes.ts)
 
@@ -147,7 +151,8 @@ Complete web application for Instituto Português de Negócios Sociais - Bureau 
 **Documents**:
 - GET /api/documents - List all documents
 - GET /api/documents/:id - Get document details
-- POST /api/documents - Upload document (admin only)
+- POST /api/documents - Upload document (admin only, multipart/form-data with file upload)
+- GET /api/documents/:id/download - Download document file from Object Storage
 
 **Notifications**:
 - GET /api/notifications - Get user notifications
@@ -256,12 +261,12 @@ db/
 ### Next Steps
 
 1. ✅ ~~Implement minutes generation for assemblies~~ - DONE (generates atas with participant names, roles, voting results)
-2. Deploy to Replit to test full authentication flow
+2. Deploy to Replit to test full authentication flow and file uploads
 3. Seed initial CMS content data
-4. Test all CRUD operations with real data
-5. Add file upload functionality for documents (Object Storage integration)
-6. Add email notifications for votes and assemblies (optional enhancement)
-7. Performance optimization and load testing
+4. Test document upload/download with real files
+5. Add email notifications for votes and assemblies (optional enhancement)
+6. Performance optimization and load testing
+7. Phase 2 features: PDF/Word atas generation, procurações (proxies), reports, secret voting, quotas
 
 ### Testing
 
