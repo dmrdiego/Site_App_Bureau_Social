@@ -6,13 +6,30 @@ Complete web application for Instituto Português de Negócios Sociais - Bureau 
 
 ## Recent Changes (October 11, 2025)
 
-### Complete Application Built
+### ✅ Task 1: Frontend & Schema - COMPLETED
 - **Database Schema**: 9 tables created (users, sessions, assemblies, voting_items, votes, documents, presences, notifications, cms_content, object_entities)
 - **Authentication**: Replit Auth integration with openid-client v6
-- **Public Site**: Hero, Mission, Services, Projects, Impact Stats, Footer components
+- **Public Site**: Hero, Mission, Services, Projects, Impact Stats, Footer components  
 - **Member Portal**: Dashboard, Assemblies, Voting, Documents, Profile pages
-- **Admin Panel**: CMS editor for content management
+- **Admin Panel**: CMS editor for content management, user management
 - **Design System**: Bureau Social brand colors (institutional blue #2c5aa0, terracotta accent), full dark mode support
+
+### ✅ Task 2: Backend Complete - COMPLETED
+- **17 API Endpoints**: Auth (4), Dashboard (1), Assemblies (4), Presences (2), Voting Items (3), Votes (2), Documents (3), Notifications (2), CMS (2), Users (2), Minutes (1)
+- **Storage Layer**: Complete DbStorage with 32 methods covering all CRUD operations
+- **Security**: requireAuth and requireAdmin middleware, Zod validation on all POST/PUT
+- **Business Logic**: 
+  - User auto-upsert on OIDC login
+  - Duplicate vote prevention
+  - Duplicate presence prevention  
+  - Assembly existence validation for presence confirmation
+  - Minutes generation with enriched participant data (names, emails, roles)
+  - Vote aggregation for results
+- **Session Management**: express-session with MemoryStore, secure cookies
+
+### 🔄 Task 3: Integration, Polish & Testing - IN PROGRESS
+- Frontend-backend integration complete with TanStack Query
+- Testing authentication flows, voting system, assembly management
 
 ## User Preferences
 
@@ -116,6 +133,9 @@ Complete web application for Instituto Português de Negócios Sociais - Bureau 
 - GET /api/assemblies/:id - Get assembly details
 - POST /api/assemblies - Create assembly (admin only)
 - PUT /api/assemblies/:id - Update assembly (admin only)
+- GET /api/assemblies/:id/presences - List assembly attendances
+- POST /api/assemblies/:id/presences - Confirm presence (validates assembly exists)
+- POST /api/assemblies/:id/generate-minutes - Generate assembly minutes with participant details (admin only)
 
 **Voting**:
 - GET /api/voting-items - List all voting items
@@ -235,13 +255,13 @@ db/
 
 ### Next Steps
 
-1. Deploy to Replit to test full authentication flow
-2. Seed initial CMS content data
-3. Test all CRUD operations with real data
-4. Add file upload functionality for documents
-5. Implement minutes generation for assemblies
-6. Add email notifications for votes and assemblies
-7. Performance optimization and testing
+1. ✅ ~~Implement minutes generation for assemblies~~ - DONE (generates atas with participant names, roles, voting results)
+2. Deploy to Replit to test full authentication flow
+3. Seed initial CMS content data
+4. Test all CRUD operations with real data
+5. Add file upload functionality for documents (Object Storage integration)
+6. Add email notifications for votes and assemblies (optional enhancement)
+7. Performance optimization and load testing
 
 ### Testing
 
