@@ -51,6 +51,20 @@ Complete web application for Instituto Português de Negócios Sociais - Bureau 
 - **Database Records**: All 30 documents registered in `documents` table with proper categorization
 - **Download System**: Enhanced document download endpoint to serve both local files and object storage files
 
+### ✅ Task 5: CMS Content Seeding & Frontend Integration - COMPLETED (October 11, 2025)
+- **CMS Content Seeded**: All 6 landing page sections populated with institutional content
+  - **Hero**: "Bureau Social - Juntos pelo Impacto" with subtitle and CTAs
+  - **Mission**: "A Nossa Missão" with 4 core values (Impacto Social, Sustentabilidade, Inovação, Colaboração)
+  - **Services**: "Os Nossos Serviços" with 4 service offerings (Consultoria, Formação, Networking, Recursos)
+  - **Projects**: "Projetos em Destaque" with 4 featured initiatives
+  - **Contact**: Complete contact details, address, and social media links (LinkedIn, Facebook, Twitter, Instagram)
+  - **Stats**: Impact metrics (150+ negócios apoiados, 500+ empreendedores formados, €2M+ investimento, 25+ parcerias)
+- **Public CMS Endpoint**: GET /api/public/cms/:sectionKey (unauthenticated access for landing page)
+- **Frontend Integration**: All landing components (Hero, Mission, Services, Projects, Stats, Footer) now load from CMS
+- **Robust Fallbacks**: All components include curated default datasets ensuring graceful degradation if CMS unavailable
+- **Seed Script**: `seed_cms_content.sql` for easy database initialization
+- **Testing**: End-to-end Playwright tests confirm all sections load correctly with CMS data
+
 ## User Preferences
 
 - Language: Portuguese (Portugal)
