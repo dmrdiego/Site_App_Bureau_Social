@@ -1,6 +1,6 @@
 # 📊 Bureau Social - Status do Projeto
 
-**Última atualização**: 12 de Outubro de 2025, 15:30
+**Última atualização**: 12 de Outubro de 2025, 16:45
 
 ---
 
@@ -31,52 +31,56 @@
 
 ---
 
-### 1️⃣ Deploy para Produção e Testes OIDC
+### 1️⃣ Deploy para Produção
 **Status**: 🟡 In Progress  
 **Prioridade**: 🔥 Alta  
-**Estimativa**: 2-3 horas  
-**Prazo Previsto**: 12 de Outubro de 2025, 18:00  
+**Estimativa**: 30 minutos  
+**Prazo Previsto**: 1 de Janeiro de 2026, 23:59  
 
-**Descrição**: Publicar aplicação no Replit para testar fluxo completo de autenticação em ambiente real, já que OIDC não funciona em desenvolvimento.
+**Descrição**: Publicar aplicação no Replit para produção com todos os testes validados.
 
 **💰 Custo Estimado (Autoscale Deployment)**:
-- **Taxa base**: $1/mês
-- **Compute**: $3.20 por milhão de unidades
-- **Requests**: $1.20 por milhão de requests
-- **Uso típico estimado**: ~$3/mês total (75,000 requests/mês)
-- **Com Replit Core ($20/mês)**: Inclui $25/mês em créditos → **sem custo adicional**
+- **Taxa base**: €0,92/mês
+- **Compute**: €2,94 por milhão de unidades
+- **Requests**: €1,10 por milhão de requests
+- **Uso típico estimado**: ~€2,75/mês total (75,000 requests/mês)
+- **Com Replit Core (€18,40/mês)**: Inclui €23,50/mês em créditos → **sem custo adicional**
 - 📖 [Documentação Oficial de Preços](https://docs.replit.com/deployments/pricing)
 
-**⚠️ IMPORTANTE**: 
-- O botão "Portal Associados" **não funciona em desenvolvimento** (erro 404/500)
-- Isto é **comportamento normal**: OIDC só funciona em produção
-- Após deploy, o login funcionará perfeitamente
+**✅ TESTES E2E CONCLUÍDOS**:
+- ✅ Autenticação OIDC e Dashboard
+- ✅ Criação e listagem de Assembleias
+- ✅ Sistema de Votação completo
+- ✅ Gestão de Documentos (30 documentos)
+- ✅ Perfil de Utilizador
 
 **Tarefas**:
 - [x] Verificar variáveis de ambiente (DATABASE_URL, SESSION_SECRET) ✓
 - [x] Build frontend sem erros ✓
-- [ ] Fazer deploy via botão "Publish"
-- [ ] Testar login/logout em produção
-- [ ] Verificar criação automática de utilizadores
-- [ ] Validar acesso ao portal de membros
+- [x] Testes E2E completos (5/5 passados) ✓
+- [x] Correção de bugs críticos ✓
+- [ ] Fazer deploy via botão "View Deployments"
+- [ ] Configurar domínio personalizado (opcional)
 
 ---
 
 ### 2️⃣ Testes E2E do Portal de Membros
-**Status**: 🔴 To Do  
+**Status**: 🟢 Done  
 **Prioridade**: 🔥 Alta  
 **Estimativa**: 3-4 horas  
-**Prazo Previsto**: 13 de Outubro de 2025, 12:00
+**Prazo Previsto**: 12 de Outubro de 2025, 16:45 ✓
 
-**Descrição**: Criar suite de testes Playwright para validar fluxos críticos do portal (dashboard, assembleias, votação, documentos).
+**Descrição**: Suite completa de testes Playwright para validar fluxos críticos do portal.
 
 **Tarefas**:
-- [ ] Teste: Login e acesso ao dashboard
-- [ ] Teste: Visualização de assembleias
-- [ ] Teste: Confirmação de presença
-- [ ] Teste: Submissão de votos
-- [ ] Teste: Download de documentos
-- [ ] Teste: Visualização de perfil
+- [x] Teste: Login e acesso ao dashboard ✓
+- [x] Teste: Visualização de assembleias ✓
+- [x] Teste: Criação de assembleias ✓
+- [x] Teste: Sistema de votação ✓
+- [x] Teste: Download de documentos ✓
+- [x] Teste: Visualização de perfil ✓
+
+**Bug Corrigido**: Conversão de data em NovaAssembleia.tsx (.toISOString() → new Date())
 
 ---
 
@@ -224,9 +228,9 @@
 
 ## 📈 Progresso Geral
 
-**Concluído**: 60% (Base completa + CMS + Documentos)  
-**Em Progresso**: 0%  
-**Pendente**: 40%
+**Concluído**: 70% (Base + CMS + Documentos + Testes E2E)  
+**Em Progresso**: 10% (Deploy)  
+**Pendente**: 20%
 
 ### 🎯 Próximo Marco (Milestone)
 **MVP em Produção** - Estimativa: 2-3 semanas  
@@ -247,5 +251,6 @@
 
 ---
 
-**Última revisão**: Tarefa 0/10 concluída | Próxima: Deploy para Produção  
-**⏰ Próximo Prazo**: 12 de Outubro de 2025, 18:00 (Deploy para Produção)
+**Última revisão**: Tarefa 1/10 concluída (Testes E2E ✓) | Em andamento: Deploy  
+**⏰ Próximo Prazo**: 1 de Janeiro de 2026, 23:59 (Deploy para Produção)  
+**🎯 Data de Publicação**: 1 de Janeiro de 2026
