@@ -32,12 +32,12 @@
 ---
 
 ### 1️⃣ Deploy para Produção
-**Status**: 🟡 In Progress  
+**Status**: 🟢 Done  
 **Prioridade**: 🔥 Alta  
 **Estimativa**: 30 minutos  
-**Prazo Previsto**: 1 de Janeiro de 2026, 23:59  
+**Concluído em**: 12 de Outubro de 2025, 17:00 ✓
 
-**Descrição**: Publicar aplicação no Replit para produção com todos os testes validados.
+**Descrição**: Aplicação publicada com sucesso no Replit Autoscale.
 
 **💰 Custo Estimado (Autoscale Deployment)**:
 - **Taxa base**: €0,92/mês
@@ -47,19 +47,19 @@
 - **Com Replit Core (€18,40/mês)**: Inclui €23,50/mês em créditos → **sem custo adicional**
 - 📖 [Documentação Oficial de Preços](https://docs.replit.com/deployments/pricing)
 
-**✅ TESTES E2E CONCLUÍDOS**:
-- ✅ Autenticação OIDC e Dashboard
-- ✅ Criação e listagem de Assembleias
-- ✅ Sistema de Votação completo
-- ✅ Gestão de Documentos (30 documentos)
-- ✅ Perfil de Utilizador
+**✅ PRODUÇÃO ATIVA**:
+- 🌐 **URL**: https://pt-bureausocial.replit.app
+- 💾 **Database**: Production database conectada
+- 🔐 **Auth**: Replit Auth configurado
+- ✅ **Testes E2E**: 5/5 passados
 
 **Tarefas**:
 - [x] Verificar variáveis de ambiente (DATABASE_URL, SESSION_SECRET) ✓
 - [x] Build frontend sem erros ✓
 - [x] Testes E2E completos (5/5 passados) ✓
 - [x] Correção de bugs críticos ✓
-- [ ] Fazer deploy via botão "View Deployments"
+- [x] Deploy via Replit Autoscale ✓
+- [x] Production database ativa ✓
 - [ ] Configurar domínio personalizado (opcional)
 
 ---
@@ -228,8 +228,8 @@
 
 ## 📈 Progresso Geral
 
-**Concluído**: 70% (Base + CMS + Documentos + Testes E2E)  
-**Em Progresso**: 10% (Deploy)  
+**Concluído**: 80% (Base + CMS + Documentos + Testes E2E + Deploy)  
+**Em Progresso**: 0%  
 **Pendente**: 20%
 
 ### 🎯 Próximo Marco (Milestone)
@@ -251,6 +251,7 @@
 
 ---
 
-**Última revisão**: Tarefa 1/10 concluída (Testes E2E ✓) | Em andamento: Deploy  
-**⏰ Próximo Prazo**: 1 de Janeiro de 2026, 23:59 (Deploy para Produção)  
-**🎯 Data de Publicação**: 1 de Janeiro de 2026
+**Última revisão**: Tarefas 1-2/10 concluídas (Testes E2E ✓ | Deploy ✓)  
+**⏰ Próximo Prazo**: 1 de Janeiro de 2026, 23:59 (faltam 81 dias)  
+**🎯 Data de Publicação**: 1 de Janeiro de 2026  
+**🌐 Produção**: https://pt-bureausocial.replit.app
