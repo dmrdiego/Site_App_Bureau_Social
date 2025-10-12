@@ -69,3 +69,43 @@ The database comprises 10 core tables:
 - **Drizzle ORM**: ORM for interacting with the PostgreSQL database.
 - **Zod**: Schema validation library used for API requests and forms.
 - **multer**: Middleware for handling `multipart/form-data`, primarily for file uploads.
+
+## Testing & Quality Assurance
+
+### E2E Test Coverage (October 2025)
+Comprehensive end-to-end testing completed using Playwright:
+
+1. **Authentication & Dashboard** ✅
+   - OIDC login flow with Replit Auth
+   - Dashboard navigation and admin verification
+   - User auto-upsert on first login
+
+2. **Assemblies Module** ✅
+   - Assembly creation flow (bug fixed: date conversion)
+   - Assembly listing and visualization
+   - Navigation to voting items
+
+3. **Voting System** ✅
+   - Voting items visualization
+   - Vote counting and results display
+   - Integration with assemblies
+
+4. **Document Management** ✅
+   - Document listing (30 seeded documents)
+   - Download functionality
+   - Admin-only upload restrictions
+
+5. **User Profile** ✅
+   - Profile information display
+   - Category badges (Fundador, Efetivo, Contribuinte)
+   - Participation statistics
+
+### Bug Fixes Applied
+- **Date Conversion Bug** (NovaAssembleia.tsx): Changed from `.toISOString()` to `new Date()` for proper backend schema compatibility
+- **Testability Improvements**: Added comprehensive data-testid attributes across all pages
+
+### Production Readiness
+- All critical user flows tested and verified
+- No security concerns identified
+- Performance validated
+- Ready for deployment
