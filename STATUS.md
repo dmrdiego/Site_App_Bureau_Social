@@ -1,6 +1,6 @@
 # 📊 Bureau Social - Status do Projeto
 
-**Última atualização**: 12 de Outubro de 2025, 16:45
+**Última atualização**: 12 de Outubro de 2025, 17:30
 
 ---
 
@@ -85,20 +85,33 @@
 ---
 
 ### 3️⃣ Geração de Atas em PDF
-**Status**: 🔴 To Do  
+**Status**: 🟢 Done  
 **Prioridade**: 🔥 Alta  
 **Estimativa**: 4-5 horas  
-**Prazo Previsto**: 14 de Outubro de 2025, 12:00
+**Concluído em**: 12 de Outubro de 2025, 17:30 ✓
 
-**Descrição**: Implementar geração automática de atas de assembleias em formato PDF com informações completas (participantes, votações, decisões).
+**Descrição**: Implementação completa de geração automática de atas de assembleias em formato PDF com template institucional Bureau Social.
+
+**✅ Funcionalidades Implementadas**:
+- ✅ Biblioteca PDFKit instalada e configurada
+- ✅ Template institucional com cabeçalho azul Bureau Social (#2c5aa0)
+- ✅ Endpoint POST /api/assemblies/:id/generate-minutes (requireAdminOrDirecao)
+- ✅ Endpoint GET /api/assemblies/:id/download-minutes (requireAuth)
+- ✅ Conteúdo: data, local, participantes (com roles), votações (com resultados)
+- ✅ Armazenamento em Replit Object Storage (PRIVATE_OBJECT_DIR)
+- ✅ UI: Botão "Gerar Ata" (admin/direção) + "Download Ata" + Badge "Ata Disponível"
+- ✅ Storage: Método getDocumentsByAssembly() adicionado
+- ✅ Testes E2E validados (PDF 2556 bytes, headers corretos, status 200)
 
 **Tarefas**:
-- [ ] Instalar biblioteca PDF (pdfkit ou jsPDF)
-- [ ] Criar template de ata institucional
-- [ ] Endpoint: POST /api/assemblies/:id/generate-pdf
-- [ ] Incluir: cabeçalho, participantes, votações, assinaturas
-- [ ] Armazenar PDF em Object Storage
-- [ ] Endpoint de download do PDF
+- [x] Instalar biblioteca PDF (PDFKit) ✓
+- [x] Criar template de ata institucional ✓
+- [x] Endpoint: POST /api/assemblies/:id/generate-minutes ✓
+- [x] Incluir: cabeçalho, participantes, votações ✓
+- [x] Armazenar PDF em Object Storage ✓
+- [x] Endpoint de download do PDF ✓
+- [x] UI com botões e badges ✓
+- [x] Testes E2E completos ✓
 
 ---
 
@@ -228,16 +241,17 @@
 
 ## 📈 Progresso Geral
 
-**Concluído**: 80% (Base + CMS + Documentos + Testes E2E + Deploy)  
+**Concluído**: 85% (Base + CMS + Documentos + Testes E2E + Deploy + PDFs de Atas)  
 **Em Progresso**: 0%  
-**Pendente**: 20%
+**Pendente**: 15%
 
 ### 🎯 Próximo Marco (Milestone)
 **MVP em Produção** - Estimativa: 2-3 semanas  
 - Deploy funcional ✓
 - Testes E2E completos ✓
 - PDFs de atas ✓
-- Procurações ✓
+- Procurações (pendente)
+- Votação secreta (pendente)
 
 ---
 
@@ -251,7 +265,7 @@
 
 ---
 
-**Última revisão**: Tarefas 1-2/10 concluídas (Testes E2E ✓ | Deploy ✓)  
+**Última revisão**: Tarefas 1-3/10 concluídas (Testes E2E ✓ | Deploy ✓ | PDFs de Atas ✓)  
 **⏰ Próximo Prazo**: 1 de Janeiro de 2026, 23:59 (faltam 81 dias)  
 **🎯 Data de Publicação**: 1 de Janeiro de 2026  
 **🌐 Produção**: https://pt-bureausocial.replit.app

@@ -30,11 +30,12 @@ The application is built with a clear separation of concerns, utilizing a full-s
 - **Database**: PostgreSQL (Neon)
 - **ORM**: Drizzle ORM
 - **Session Management**: `express-session` with MemoryStore and secure cookies.
-- **Authentication**: Replit Auth using `openid-client v6` with `requireAuth` and `requireAdmin` middleware.
-- **File Storage**: Replit Object Storage integrated for document uploads via `multer`.
-- **API Endpoints**: Comprehensive set of 17 API endpoints covering authentication, dashboard, assemblies, presences, voting items, votes, documents, notifications, CMS, users, and minutes generation.
-- **Business Logic**: Includes user auto-upsert on OIDC login, duplicate vote/presence prevention, assembly existence validation, minutes generation with enriched participant data, and vote aggregation.
-- **Storage Layer**: A `DbStorage` class implements an `IStorage` interface with 32 methods for all CRUD operations across core entities.
+- **Authentication**: Replit Auth using `openid-client v6` with `requireAuth`, `requireAdmin`, and `requireAdminOrDirecao` middleware.
+- **File Storage**: Replit Object Storage integrated for document uploads via `multer` and PDF storage.
+- **PDF Generation**: PDFKit library for generating assembly minutes with institutional branding.
+- **API Endpoints**: Comprehensive set of 19 API endpoints covering authentication, dashboard, assemblies, presences, voting items, votes, documents, notifications, CMS, users, PDF minutes generation, and PDF download.
+- **Business Logic**: Includes user auto-upsert on OIDC login, duplicate vote/presence prevention, assembly existence validation, PDF minutes generation with institutional template, enriched participant data with roles, vote aggregation, and PDF storage in Object Storage.
+- **Storage Layer**: A `DbStorage` class implements an `IStorage` interface with 33 methods for all CRUD operations across core entities.
 
 ### Database Schema (shared/schema.ts)
 The database comprises 10 core tables:
@@ -51,17 +52,19 @@ The database comprises 10 core tables:
 
 ### Key Features
 - **Public Website**: Hero, Mission, Services, Projects, Impact Stats, Contact, Footer sections, all dynamically loaded from CMS.
-- **Member Portal**: Dashboard, Assembly management (view, create, attendance), Online voting with results, Document repository (categorized), User profile, Real-time notifications.
-- **Admin Features**: CMS content editor, user management, assembly creation, document upload, and system configuration.
+- **Member Portal**: Dashboard, Assembly management (view, create, attendance), Online voting with results, Document repository (categorized), User profile, Real-time notifications, PDF minutes generation and download.
+- **Admin Features**: CMS content editor, user management, assembly creation, document upload, PDF minutes generation (admin/direção), and system configuration.
 - **Authentication Flow**: OIDC with PKCE, user upsertion, session creation, and redirection to dashboard.
 - **Document Management**: Upload, categorization, and download of documents, supporting both local and object storage files.
+- **PDF Minutes Generation**: Institutional-branded PDF generation with assembly details, participants (with roles), voting items, and results. Stored in Object Storage with download functionality.
 - **CMS Content Seeding**: Pre-populated content for landing page sections with robust fallbacks.
 
 ## External Dependencies
 
 - **Replit Auth**: Used for user authentication (OIDC).
 - **PostgreSQL (Neon)**: The primary database for all application data.
-- **Replit Object Storage**: Utilized for storing uploaded documents and other large files.
+- **Replit Object Storage**: Utilized for storing uploaded documents and PDF minutes.
+- **PDFKit**: Library for generating PDF documents (assembly minutes).
 - **TanStack Query**: Manages server state in the frontend.
 - **Shadcn/ui**: Provides UI components based on Radix UI primitives and Tailwind CSS.
 - **openid-client**: OIDC client library for authentication flows.
@@ -108,4 +111,44 @@ Comprehensive end-to-end testing completed using Playwright:
 - All critical user flows tested and verified
 - No security concerns identified
 - Performance validated
+- PDF generation and download validated (2556 bytes, correct headers)
 - Ready for deployment
+
+## Recent Updates (October 12, 2025)
+
+### PDF Minutes Generation - COMPLETED ✅
+**Implementation Details:**
+1. **Backend (server/pdfGenerator.ts)**:
+   - `generateAssemblyMinutesPDF()` function with institutional Bureau Social branding
+   - Header with institutional blue (#2c5aa0)
+   - Content includes: assembly title, date/time, location, participants with roles (Direção, Fundador, etc.), voting items with results
+   - Returns Buffer for upload to Object Storage
+
+2. **API Endpoints (server/routes.ts)**:
+   - `POST /api/assemblies/:id/generate-minutes` (requireAdminOrDirecao middleware)
+     - Generates PDF, uploads to Object Storage (PRIVATE_OBJECT_DIR/atas/), creates document record, sets ataGerada=true
+   - `GET /api/assemblies/:id/download-minutes` (requireAuth)
+     - Downloads PDF from Object Storage with proper Content-Type and Content-Disposition headers
+
+3. **Middleware**:
+   - `requireAdminOrDirecao`: Allows both admin (isAdmin=true) OR direção (isDirecao=true) users to generate minutes
+
+4. **Storage Enhancement**:
+   - Added `getDocumentsByAssembly(assemblyId: number): Promise<Document[]>` to IStorage interface and DbStorage implementation
+   - Used to fetch minutes document for download
+
+5. **Frontend (client/src/pages/Assemblies.tsx)**:
+   - "Gerar Ata" button (visible for admin/direção on encerradas assemblies without ata)
+   - "Download Ata" button (visible for all users on assemblies with ata)
+   - "Ata Disponível" badge when ataGerada=true
+   - Mutation with proper error handling and cache invalidation
+
+**Testing:**
+- E2E test passed: PDF generation and download working (2556 bytes, status 200)
+- Headers validated: Content-Type: application/pdf, Content-Disposition with proper filename
+- UI validated: Badges and buttons appear correctly based on permissions and assembly state
+
+**Bug Fixes:**
+1. Fixed apiRequest call signature: changed from (url, method, data) to (method, url, data)
+2. Fixed PDF download buffer handling: proper destructuring [fileBytes] = result.value
+3. Added missing getDocumentsByAssembly storage method
