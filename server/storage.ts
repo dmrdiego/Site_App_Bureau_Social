@@ -89,7 +89,7 @@ export interface IStorage {
 
   // Proxies (Procurações)
   createProxy(proxy: InsertProxy): Promise<Proxy>;
-  getProxiesByAssembly(assemblyId: number): Promise<Proxy[]>;
+  getProxiesByAssembly(assemblyId: number, includeRevoked?: boolean): Promise<Proxy[]>;
   getActiveProxyForUser(assemblyId: number, giverId: string): Promise<Proxy | undefined>;
   getProxiesReceivedByUser(assemblyId: number, receiverId: string): Promise<Proxy[]>;
   revokeProxy(id: number): Promise<Proxy | undefined>;
@@ -347,7 +347,17 @@ export class DbStorage implements IStorage {
     return inserted[0];
   }
 
-  async getProxiesByAssembly(assemblyId: number): Promise<Proxy[]> {
+  async getProxiesByAssembly(assemblyId: number, includeRevoked: boolean = false): Promise<Proxy[]> {
+    if (includeRevoked) {
+      // Return all proxies (active and revoked) for admin auditing
+      return await db
+        .select()
+        .from(proxies)
+        .where(eq(proxies.assemblyId, assemblyId))
+        .orderBy(desc(proxies.createdAt));
+    }
+    
+    // Return only active proxies
     return await db
       .select()
       .from(proxies)

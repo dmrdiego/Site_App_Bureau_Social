@@ -13,6 +13,7 @@ import {
   insertVoteSchema,
   insertDocumentSchema,
   insertCmsContentSchema,
+  insertProxySchema,
 } from "@shared/schema";
 
 // Setup multer for file uploads (memory storage)
@@ -143,6 +144,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(assembly);
     } catch (error) {
       res.status(500).json({ message: "Failed to update assembly" });
+    }
+  });
+
+  // ============================================================================
+  // PROXIES (Procurações)
+  // ============================================================================
+
+  // Create or revoke proxy
+  app.post("/api/assemblies/:id/proxies", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const assemblyId = parseInt(req.params.id);
+      const userId = getUserId(req);
+      const { receiverId, action } = req.body; // action: 'create' or 'revoke'
+
+      // Check if assembly exists
+      const assembly = await storage.getAssemblyById(assemblyId);
+      if (!assembly) {
+        return res.status(404).json({ message: "Assembly not found" });
+      }
+
+      if (action === 'revoke') {
+        // Revoke existing proxy
+        const existingProxy = await storage.getActiveProxyForUser(assemblyId, userId);
+        if (!existingProxy) {
+          return res.status(404).json({ message: "No active proxy found" });
+        }
+
+        const revokedProxy = await storage.revokeProxy(existingProxy.id);
+        return res.json({ message: "Proxy revoked successfully", proxy: revokedProxy });
+      }
+
+      // Create new proxy
+      if (!receiverId) {
+        return res.status(400).json({ message: "receiverId is required" });
+      }
+
+      // Check if user is trying to delegate to themselves
+      if (receiverId === userId) {
+        return res.status(400).json({ message: "Cannot delegate to yourself" });
+      }
+
+      // Check for existing active proxy
+      const existingProxy = await storage.getActiveProxyForUser(assemblyId, userId);
+      if (existingProxy) {
+        return res.status(400).json({ message: "You already have an active proxy for this assembly" });
+      }
+
+      // Check for proxy loops
+      const hasLoop = await storage.checkProxyLoop(assemblyId, userId, receiverId);
+      if (hasLoop) {
+        return res.status(400).json({ message: "Proxy loop detected. This would create a circular delegation." });
+      }
+
+      // Create the proxy
+      const proxyData = insertProxySchema.parse({
+        assemblyId,
+        giverId: userId,
+        receiverId,
+        status: 'ativa',
+      });
+
+      const proxy = await storage.createProxy(proxyData);
+      res.status(201).json(proxy);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to manage proxy" });
+    }
+  });
+
+  // Get my proxies (given and received)
+  app.get("/api/assemblies/:id/my-proxies", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const assemblyId = parseInt(req.params.id);
+      const userId = getUserId(req);
+
+      // Get proxy I gave
+      const givenProxy = await storage.getActiveProxyForUser(assemblyId, userId);
+
+      // Get proxies I received
+      const receivedProxies = await storage.getProxiesReceivedByUser(assemblyId, userId);
+
+      // Get user details for each proxy
+      const receivedProxiesWithDetails = await Promise.all(
+        receivedProxies.map(async (proxy) => {
+          const giver = await storage.getUser(proxy.giverId);
+          return {
+            ...proxy,
+            giverName: giver ? `${giver.firstName} ${giver.lastName}` : 'Unknown',
+          };
+        })
+      );
+
+      let givenProxyWithDetails = null;
+      if (givenProxy) {
+        const receiver = await storage.getUser(givenProxy.receiverId);
+        givenProxyWithDetails = {
+          ...givenProxy,
+          receiverName: receiver ? `${receiver.firstName} ${receiver.lastName}` : 'Unknown',
+        };
+      }
+
+      res.json({
+        given: givenProxyWithDetails,
+        received: receivedProxiesWithDetails,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch proxies" });
+    }
+  });
+
+  // Get all proxies for an assembly (admin only - includes revoked for auditing)
+  app.get("/api/assemblies/:id/proxies", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const assemblyId = parseInt(req.params.id);
+      // Include revoked proxies for admin auditing
+      const proxies = await storage.getProxiesByAssembly(assemblyId, true);
+
+      // Enrich with user details
+      const proxiesWithDetails = await Promise.all(
+        proxies.map(async (proxy) => {
+          const giver = await storage.getUser(proxy.giverId);
+          const receiver = await storage.getUser(proxy.receiverId);
+          return {
+            ...proxy,
+            giverName: giver ? `${giver.firstName} ${giver.lastName}` : 'Unknown',
+            receiverName: receiver ? `${receiver.firstName} ${receiver.lastName}` : 'Unknown',
+          };
+        })
+      );
+
+      res.json(proxiesWithDetails);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch proxies" });
     }
   });
 
