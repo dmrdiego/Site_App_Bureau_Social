@@ -28,6 +28,9 @@ import {
   type InsertCmsContent,
   type ObjectEntity,
   type InsertObjectEntity,
+  proxies,
+  type Proxy,
+  type InsertProxy,
 } from "@shared/schema";
 import { eq, desc, and, gte, lte } from "drizzle-orm";
 
@@ -83,6 +86,14 @@ export interface IStorage {
   // Object Storage
   createObjectEntity(entity: InsertObjectEntity): Promise<ObjectEntity>;
   getObjectEntity(objectPath: string): Promise<ObjectEntity | undefined>;
+
+  // Proxies (Procurações)
+  createProxy(proxy: InsertProxy): Promise<Proxy>;
+  getProxiesByAssembly(assemblyId: number): Promise<Proxy[]>;
+  getActiveProxyForUser(assemblyId: number, giverId: string): Promise<Proxy | undefined>;
+  getProxiesReceivedByUser(assemblyId: number, receiverId: string): Promise<Proxy[]>;
+  revokeProxy(id: number): Promise<Proxy | undefined>;
+  checkProxyLoop(assemblyId: number, giverId: string, receiverId: string): Promise<boolean>;
 }
 
 export class DbStorage implements IStorage {
@@ -328,6 +339,102 @@ export class DbStorage implements IStorage {
       .where(eq(objectEntities.objectPath, objectPath))
       .limit(1);
     return result[0];
+  }
+
+  // Proxies (Procurações)
+  async createProxy(proxy: InsertProxy): Promise<Proxy> {
+    const inserted = await db.insert(proxies).values(proxy).returning();
+    return inserted[0];
+  }
+
+  async getProxiesByAssembly(assemblyId: number): Promise<Proxy[]> {
+    return await db
+      .select()
+      .from(proxies)
+      .where(and(
+        eq(proxies.assemblyId, assemblyId),
+        eq(proxies.status, 'ativa')
+      ))
+      .orderBy(desc(proxies.createdAt));
+  }
+
+  async getActiveProxyForUser(assemblyId: number, giverId: string): Promise<Proxy | undefined> {
+    const result = await db
+      .select()
+      .from(proxies)
+      .where(and(
+        eq(proxies.assemblyId, assemblyId),
+        eq(proxies.giverId, giverId),
+        eq(proxies.status, 'ativa')
+      ))
+      .limit(1);
+    return result[0];
+  }
+
+  async getProxiesReceivedByUser(assemblyId: number, receiverId: string): Promise<Proxy[]> {
+    return await db
+      .select()
+      .from(proxies)
+      .where(and(
+        eq(proxies.assemblyId, assemblyId),
+        eq(proxies.receiverId, receiverId),
+        eq(proxies.status, 'ativa')
+      ))
+      .orderBy(desc(proxies.createdAt));
+  }
+
+  async revokeProxy(id: number): Promise<Proxy | undefined> {
+    const updated = await db
+      .update(proxies)
+      .set({ status: 'revogada', revokedAt: new Date() })
+      .where(eq(proxies.id, id))
+      .returning();
+    return updated[0];
+  }
+
+  async checkProxyLoop(assemblyId: number, giverId: string, receiverId: string): Promise<boolean> {
+    // Check if receiverId already gave a proxy to giverId (direct loop)
+    const directLoop = await db
+      .select()
+      .from(proxies)
+      .where(and(
+        eq(proxies.assemblyId, assemblyId),
+        eq(proxies.giverId, receiverId),
+        eq(proxies.receiverId, giverId),
+        eq(proxies.status, 'ativa')
+      ))
+      .limit(1);
+
+    if (directLoop.length > 0) {
+      return true; // Loop detected
+    }
+
+    // Check for indirect loops (receiverId gave proxy to someone who gave to giverId, etc.)
+    // Simple implementation: check up to 3 levels deep
+    let currentReceiver = receiverId;
+    for (let i = 0; i < 3; i++) {
+      const nextProxy = await db
+        .select()
+        .from(proxies)
+        .where(and(
+          eq(proxies.assemblyId, assemblyId),
+          eq(proxies.giverId, currentReceiver),
+          eq(proxies.status, 'ativa')
+        ))
+        .limit(1);
+
+      if (nextProxy.length === 0) {
+        break; // No more proxies in the chain
+      }
+
+      if (nextProxy[0].receiverId === giverId) {
+        return true; // Loop detected
+      }
+
+      currentReceiver = nextProxy[0].receiverId;
+    }
+
+    return false; // No loop detected
   }
 }
 
