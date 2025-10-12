@@ -25,6 +25,11 @@ const upload = multer({
 // Auth middleware - adapters for requireAuth and requireAdmin
 import type { NextFunction } from "express";
 
+// Helper to get userId from passport user claims
+function getUserId(req: any): string {
+  return req.user?.claims?.sub;
+}
+
 function requireAuth(req: Request, res: Response, next: NextFunction) {
   return isAuthenticated(req, res, next);
 }
@@ -67,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const upcomingAssemblies = await storage.getUpcomingAssemblies();
       const openVotingItems = await storage.getOpenVotingItems();
       const documents = await storage.getAllDocuments();
-      const notifications = await storage.getUserNotifications(req.session.userId!);
+      const notifications = await storage.getUserNotifications(getUserId(req));
 
       res.json({
         upcomingAssemblies: upcomingAssemblies.length,
@@ -116,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertAssemblySchema.parse(req.body);
       const assembly = await storage.createAssembly({
         ...data,
-        createdBy: req.session.userId,
+        createdBy: getUserId(req),
       });
 
       res.status(201).json(assembly);
@@ -188,14 +193,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertVoteSchema.parse(req.body);
 
       // Check if user already voted
-      const existingVote = await storage.getUserVote(data.votingItemId!, req.session.userId!);
+      const existingVote = await storage.getUserVote(data.votingItemId!, getUserId(req));
       if (existingVote) {
         return res.status(400).json({ message: "You have already voted on this item" });
       }
 
       const vote = await storage.createVote({
         ...data,
-        userId: req.session.userId,
+        userId: getUserId(req),
         ipAddress: req.ip,
       });
 
@@ -255,7 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertDocumentSchema.parse(req.body);
       const document = await storage.createDocument({
         ...data,
-        uploadedBy: req.session.userId,
+        uploadedBy: getUserId(req),
       });
 
       res.status(201).json(document);
@@ -296,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create object entity record
       await storage.createObjectEntity({
         objectPath,
-        owner: req.session.userId,
+        owner: getUserId(req),
         visibility: 'private',
         metadata: {
           originalName: req.file.originalname,
@@ -314,7 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filePath: objectPath,
         fileSize: req.file.size,
         visivelPara: visivelPara || 'todos',
-        uploadedBy: req.session.userId,
+        uploadedBy: getUserId(req),
       });
 
       res.status(201).json(document);
@@ -397,7 +402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/notifications", requireAuth, async (req: Request, res: Response) => {
     try {
-      const notifications = await storage.getUserNotifications(req.session.userId!);
+      const notifications = await storage.getUserNotifications(getUserId(req));
       res.json(notifications);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch notifications" });
@@ -455,7 +460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertCmsContentSchema.parse(req.body);
       const content = await storage.upsertCmsContent({
         ...data,
-        updatedBy: req.session.userId,
+        updatedBy: getUserId(req),
       });
 
       res.json(content);
@@ -518,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if already confirmed
       const existingPresences = await storage.getPresencesByAssembly(assemblyId);
-      const alreadyConfirmed = existingPresences.find(p => p.userId === req.session.userId);
+      const alreadyConfirmed = existingPresences.find(p => p.userId === getUserId(req));
       
       if (alreadyConfirmed) {
         return res.status(400).json({ message: "Presence already confirmed" });
@@ -526,7 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const presence = await storage.createPresence({
         assemblyId,
-        userId: req.session.userId!,
+        userId: getUserId(req),
         presente: true,
         confirmadoEm: new Date(),
       });
@@ -626,7 +631,7 @@ Ata gerada automaticamente pelo sistema Bureau Social.
         tipo: 'ata',
         assemblyId,
         conteudo: minutesText,
-        uploadedBy: req.session.userId,
+        uploadedBy: getUserId(req),
       });
 
       // Mark assembly as having minutes
