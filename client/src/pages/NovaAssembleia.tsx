@@ -78,7 +78,7 @@ export default function NovaAssembleia() {
     mutationFn: async (data: FormData) => {
       return await apiRequest('POST', '/api/assemblies', {
         ...data,
-        dataAssembleia: new Date(data.dataAssembleia).toISOString(),
+        dataAssembleia: new Date(data.dataAssembleia),
       });
     },
     onSuccess: () => {
