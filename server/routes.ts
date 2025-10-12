@@ -325,16 +325,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/votes", requireAuth, async (req: Request, res: Response) => {
     try {
       const data = insertVoteSchema.parse(req.body);
+      const userId = getUserId(req);
 
       // Check if user already voted
-      const existingVote = await storage.getUserVote(data.votingItemId!, getUserId(req));
+      const existingVote = await storage.getUserVote(data.votingItemId!, userId);
       if (existingVote) {
         return res.status(400).json({ message: "You have already voted on this item" });
       }
 
+      // Get voting item to find assembly ID
+      const votingItem = await storage.getVotingItemById(data.votingItemId!);
+      if (!votingItem) {
+        return res.status(404).json({ message: "Voting item not found" });
+      }
+
+      // Check if user has delegated their vote via proxy
+      const activeProxy = await storage.getActiveProxyForUser(votingItem.assemblyId!, userId);
+      if (activeProxy) {
+        return res.status(400).json({ 
+          message: "Não pode votar porque delegou o seu voto. Revogue a procuração para poder votar." 
+        });
+      }
+
       const vote = await storage.createVote({
         ...data,
-        userId: getUserId(req),
+        userId,
         ipAddress: req.ip,
       });
 
@@ -348,10 +363,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const votes = await storage.getVotesByVotingItem(id);
+      
+      // Get voting item to find assembly ID
+      const votingItem = await storage.getVotingItemById(id);
+      if (!votingItem) {
+        return res.status(404).json({ message: "Voting item not found" });
+      }
 
+      // Get active proxies for this assembly
+      const proxies = await storage.getProxiesByAssembly(votingItem.assemblyId!, false);
+
+      // Calculate results with proxy votes
       const results = votes.reduce((acc, vote) => {
         const voto = vote.voto.toLowerCase();
-        acc[voto] = (acc[voto] || 0) + 1;
+        
+        // Base vote count (1 for the voter themselves)
+        let voteWeight = 1;
+        
+        // Add proxy votes (votes from people who delegated to this voter)
+        const receivedProxies = proxies.filter(p => p.receiverId === vote.userId);
+        voteWeight += receivedProxies.length;
+        
+        acc[voto] = (acc[voto] || 0) + voteWeight;
         return acc;
       }, {} as Record<string, number>);
 

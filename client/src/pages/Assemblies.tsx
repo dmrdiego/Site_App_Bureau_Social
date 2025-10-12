@@ -87,10 +87,181 @@ export default function Assemblies() {
   );
 }
 
+interface ProxyData {
+  given: {
+    id: number;
+    receiverId: string;
+    receiverName: string;
+  } | null;
+  received: Array<{
+    id: number;
+    giverId: string;
+    giverName: string;
+  }>;
+}
+
+function ProxyDialog({ assembly }: { assembly: Assembly }) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<string>("");
+
+  const { data: users } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    enabled: open,
+  });
+
+  const { data: myProxies, refetch: refetchProxies } = useQuery<ProxyData>({
+    queryKey: ["/api/assemblies", assembly.id, "my-proxies"],
+    enabled: open,
+  });
+
+  const createProxy = useMutation({
+    mutationFn: async (receiverId: string) => {
+      const res = await apiRequest('POST', `/api/assemblies/${assembly.id}/proxies`, {
+        receiverId,
+        action: 'create',
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchProxies();
+      setSelectedUser("");
+      toast({
+        title: "Procuração criada",
+        description: "A sua procuração foi criada com sucesso",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao criar procuração",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const revokeProxy = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', `/api/assemblies/${assembly.id}/proxies`, {
+        action: 'revoke',
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchProxies();
+      toast({
+        title: "Procuração revogada",
+        description: "A sua procuração foi revogada com sucesso",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao revogar procuração",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" data-testid={`button-procuracao-${assembly.id}`}>
+          <UserCheck className="h-4 w-4 mr-2" />
+          Procuração
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Gerir Procuração</DialogTitle>
+          <DialogDescription>
+            Delegue o seu voto nesta assembleia a outro associado
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {myProxies?.given ? (
+            <div className="p-4 border rounded-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Procuração ativa</p>
+                  <p className="text-sm text-muted-foreground">
+                    Delegou o voto a: {myProxies.given.receiverName}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => revokeProxy.mutate()}
+                  disabled={revokeProxy.isPending}
+                  data-testid={`button-revogar-procuracao-${assembly.id}`}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <label className="text-sm font-medium">Delegar voto a:</label>
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger data-testid={`select-user-${assembly.id}`}>
+                  <SelectValue placeholder="Selecione um associado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users?.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.firstName} {user.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={() => createProxy.mutate(selectedUser)}
+                disabled={!selectedUser || createProxy.isPending}
+                className="w-full"
+                data-testid={`button-criar-procuracao-${assembly.id}`}
+              >
+                {createProxy.isPending ? "A criar..." : "Criar Procuração"}
+              </Button>
+            </div>
+          )}
+
+          {myProxies?.received && myProxies.received.length > 0 && (
+            <div className="pt-4 border-t">
+              <p className="text-sm font-medium mb-2">Procurações recebidas:</p>
+              <div className="space-y-2">
+                {myProxies.received.map((proxy) => (
+                  <div key={proxy.id} className="p-2 bg-muted rounded text-sm" data-testid={`proxy-received-${proxy.id}`}>
+                    {proxy.giverName} delegou o voto em si
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function AssemblyCard({ assembly }: { assembly: Assembly }) {
   const { toast } = useToast();
   const { isAdmin, isDirecao } = useAuth();
   const canGenerateMinutes = isAdmin || isDirecao;
+
+  // Fetch proxy data for this assembly
+  const { data: myProxies } = useQuery<ProxyData>({
+    queryKey: ["/api/assemblies", assembly.id, "my-proxies"],
+    enabled: assembly.status === 'agendada',
+  });
 
   const generateMinutes = useMutation({
     mutationFn: async (assemblyId: number) => {
@@ -144,9 +315,23 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
                 {assembly.status}
               </Badge>
             </div>
-            <Badge variant="outline" className="mt-2">
-              {getTypeLabel(assembly.tipo)}
-            </Badge>
+            <div className="flex gap-2 mt-2 flex-wrap">
+              <Badge variant="outline">
+                {getTypeLabel(assembly.tipo)}
+              </Badge>
+              {myProxies?.given && (
+                <Badge variant="secondary" data-testid={`badge-procuracao-dada-${assembly.id}`}>
+                  <UserCheck className="h-3 w-3 mr-1" />
+                  Procuração: {myProxies.given.receiverName}
+                </Badge>
+              )}
+              {myProxies?.received && myProxies.received.length > 0 && (
+                <Badge variant="secondary" data-testid={`badge-procuracoes-recebidas-${assembly.id}`}>
+                  <Users className="h-3 w-3 mr-1" />
+                  {myProxies.received.length} {myProxies.received.length === 1 ? 'procuração' : 'procurações'}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -205,11 +390,14 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
             </Link>
           </Button>
           {assembly.status === 'agendada' && (
-            <Button variant="secondary" asChild>
-              <Link href={`/assembleias/${assembly.id}/presenca`} data-testid={`button-confirmar-${assembly.id}`}>
-                Confirmar Presença
-              </Link>
-            </Button>
+            <>
+              <Button variant="secondary" asChild>
+                <Link href={`/assembleias/${assembly.id}/presenca`} data-testid={`button-confirmar-${assembly.id}`}>
+                  Confirmar Presença
+                </Link>
+              </Button>
+              <ProxyDialog assembly={assembly} />
+            </>
           )}
           {assembly.status === 'encerrada' && assembly.ataGerada && (
             <Button variant="outline" asChild data-testid={`button-download-ata-${assembly.id}`}>
