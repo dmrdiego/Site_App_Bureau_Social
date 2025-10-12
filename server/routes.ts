@@ -1,12 +1,10 @@
 // IMPORTANT: Based on Replit Auth blueprint (javascript_log_in_with_replit)
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import session from "express-session";
-import createMemoryStore from "memorystore";
-import * as oidc from "openid-client";
 import multer from "multer";
 import { Client } from "@replit/object-storage";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import type { User } from "@shared/schema";
 import {
   insertAssemblySchema,
@@ -24,170 +22,40 @@ const upload = multer({
   },
 });
 
-const MemoryStore = createMemoryStore(session);
+// Auth middleware - adapters for requireAuth and requireAdmin
+import type { NextFunction } from "express";
 
-// Session config
-const sessionSettings: session.SessionOptions = {
-  secret: process.env.SESSION_SECRET || "bureau-social-secret-key-change-in-production",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  },
-  store: new MemoryStore({
-    checkPeriod: 86400000, // 24 hours
-  }),
-};
-
-// Extend session type
-declare module "express-session" {
-  interface SessionData {
-    userId?: string;
-  }
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  return isAuthenticated(req, res, next);
 }
 
-// Auth middleware
-function requireAuth(req: Request, res: Response, next: Function) {
-  if (!req.session.userId) {
-    return res.status(401).json({ message: "401: Unauthorized - Authentication required" });
-  }
-  next();
-}
-
-function requireAdmin(req: Request, res: Response, next: Function) {
-  if (!req.session.userId) {
-    return res.status(401).json({ message: "401: Unauthorized - Authentication required" });
-  }
-  
-  storage.getUser(req.session.userId).then((user) => {
-    if (!user?.isAdmin) {
+async function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  return isAuthenticated(req, res, async () => {
+    const user = req.user as any;
+    const userId = user.claims.sub;
+    
+    const dbUser = await storage.getUser(userId);
+    if (!dbUser?.isAdmin) {
       return res.status(403).json({ message: "403: Forbidden - Admin access required" });
     }
     next();
-  }).catch(() => {
-    return res.status(500).json({ message: "Internal server error" });
   });
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  app.use(session(sessionSettings));
+  // Setup Replit Auth (replaces manual OIDC setup)
+  await setupAuth(app);
 
-  // ============================================================================
-  // REPLIT AUTH SETUP (using openid-client v6)
-  // ============================================================================
-  
-  let oidcConfig: any = null;
-  const codeVerifiers = new Map<string, string>();
-
-  const initOidc = async () => {
+  // Auth user endpoint
+  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
-      const issuerUrl = new URL(process.env.ISSUER_URL || "https://auth.replit.com");
-      const clientId = process.env.REPL_ID || "";
-      
-      oidcConfig = await oidc.discovery(issuerUrl, clientId);
-      console.log("OIDC initialized successfully");
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
     } catch (error) {
-      console.error("Failed to initialize OIDC:", error);
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
-  };
-
-  await initOidc();
-
-  // Auth routes
-  app.get("/api/login", async (req: Request, res: Response) => {
-    if (!oidcConfig) {
-      return res.status(500).json({ message: "Auth not configured" });
-    }
-
-    try {
-      const state = Math.random().toString(36).substring(7);
-      const codeVerifier = oidc.randomPKCECodeVerifier();
-      const codeChallenge = await oidc.calculatePKCECodeChallenge(codeVerifier);
-      
-      codeVerifiers.set(state, codeVerifier);
-
-      const authUrl = oidc.buildAuthorizationUrl(oidcConfig, {
-        redirect_uri: `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/auth/callback`,
-        scope: "openid email profile",
-        state,
-        code_challenge: codeChallenge,
-        code_challenge_method: 'S256',
-      });
-
-      res.redirect(authUrl.href);
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Failed to initiate login" });
-    }
-  });
-
-  app.get("/api/auth/callback", async (req: Request, res: Response) => {
-    if (!oidcConfig) {
-      return res.status(500).json({ message: "Auth not configured" });
-    }
-
-    try {
-      const currentUrl = new URL(
-        req.url,
-        `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-      );
-      
-      const state = req.query.state as string;
-      const codeVerifier = codeVerifiers.get(state);
-      
-      if (!codeVerifier) {
-        return res.redirect("/?error=invalid_state");
-      }
-
-      const tokens = await oidc.authorizationCodeGrant(oidcConfig, currentUrl, {
-        pkceCodeVerifier: codeVerifier,
-        expectedState: state,
-      });
-
-      codeVerifiers.delete(state);
-
-      const userInfo = await oidc.fetchUserInfo(oidcConfig, tokens.access_token);
-
-      // Upsert user
-      const user = await storage.upsertUser({
-        id: userInfo.sub as string,
-        email: userInfo.email as string,
-        firstName: userInfo.given_name as string,
-        lastName: userInfo.family_name as string,
-        profileImageUrl: userInfo.picture as string,
-      });
-
-      req.session.userId = user.id;
-      res.redirect("/dashboard");
-    } catch (error) {
-      console.error("Auth callback error:", error);
-      res.redirect("/?error=auth_failed");
-    }
-  });
-
-  app.get("/api/logout", (req: Request, res: Response) => {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ message: "Logout failed" });
-      }
-      res.redirect("/");
-    });
-  });
-
-  app.get("/api/auth/user", async (req: Request, res: Response) => {
-    if (!req.session.userId) {
-      return res.status(401).json({ message: "401: Unauthorized - Not logged in" });
-    }
-
-    const user = await storage.getUser(req.session.userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json(user);
   });
 
   // ============================================================================
