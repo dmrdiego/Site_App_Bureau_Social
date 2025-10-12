@@ -132,6 +132,26 @@ export const insertVoteSchema = createInsertSchema(votes).omit({ id: true });
 export const selectVoteSchema = createSelectSchema(votes);
 
 // ============================================================================
+// PROXIES (Procurações)
+// ============================================================================
+
+export const proxies = pgTable("proxies", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  assemblyId: integer("assembly_id").references(() => assemblies.id).notNull(),
+  giverId: varchar("giver_id").references(() => users.id).notNull(), // quem dá a procuração
+  receiverId: varchar("receiver_id").references(() => users.id).notNull(), // quem recebe a procuração
+  status: varchar("status", { length: 20 }).default('ativa'), // ativa, revogada
+  createdAt: timestamp("created_at").defaultNow(),
+  revokedAt: timestamp("revoked_at"),
+});
+
+export type Proxy = typeof proxies.$inferSelect;
+export type InsertProxy = typeof proxies.$inferInsert;
+
+export const insertProxySchema = createInsertSchema(proxies).omit({ id: true });
+export const selectProxySchema = createSelectSchema(proxies);
+
+// ============================================================================
 // DOCUMENTS (Documentos)
 // ============================================================================
 
