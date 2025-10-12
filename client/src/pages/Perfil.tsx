@@ -40,7 +40,7 @@ export default function Perfil() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Meu Perfil</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="heading-perfil">Meu Perfil</h1>
         <p className="text-muted-foreground">
           Informações da sua conta de associado
         </p>
@@ -60,10 +60,10 @@ export default function Perfil() {
                   {user.firstName?.[0]}{user.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
-              <h3 className="text-xl font-semibold text-foreground mb-1">
+              <h3 className="text-xl font-semibold text-foreground mb-1" data-testid="text-nome-completo">
                 {user.firstName} {user.lastName}
               </h3>
-              <Badge variant="secondary" className="mb-2">
+              <Badge variant="secondary" className="mb-2" data-testid="badge-categoria">
                 {getCategoriaLabel(user.categoria)}
               </Badge>
               {isAdmin && (
@@ -93,6 +93,7 @@ export default function Perfil() {
                 icon={Mail}
                 label="Email"
                 value={user.email || "Não definido"}
+                testId="info-email"
               />
               <InfoItem
                 icon={Phone}
@@ -172,13 +173,14 @@ export default function Perfil() {
   );
 }
 
-function InfoItem({ icon: Icon, label, value }: {
+function InfoItem({ icon: Icon, label, value, testId }: {
   icon: any;
   label: string;
   value: React.ReactNode;
+  testId?: string;
 }) {
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-3" data-testid={testId}>
       <div className="w-10 h-10 bg-primary/10 rounded-md flex items-center justify-center flex-shrink-0">
         <Icon className="h-5 w-5 text-primary" />
       </div>
