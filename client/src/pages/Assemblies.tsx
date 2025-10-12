@@ -106,7 +106,7 @@ function ProxyDialog({ assembly }: { assembly: Assembly }) {
   const [selectedUser, setSelectedUser] = useState<string>("");
 
   const { data: users } = useQuery<User[]>({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/users/for-proxy"],
     enabled: open,
   });
 
@@ -384,20 +384,8 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
         </div>
 
         <div className="flex gap-3 pt-4 border-t flex-wrap">
-          <Button asChild>
-            <Link href={`/assembleias/${assembly.id}`} data-testid={`button-detalhes-${assembly.id}`}>
-              Ver Detalhes
-            </Link>
-          </Button>
           {assembly.status === 'agendada' && (
-            <>
-              <Button variant="secondary" asChild>
-                <Link href={`/assembleias/${assembly.id}/presenca`} data-testid={`button-confirmar-${assembly.id}`}>
-                  Confirmar Presença
-                </Link>
-              </Button>
-              <ProxyDialog assembly={assembly} />
-            </>
+            <ProxyDialog assembly={assembly} />
           )}
           {assembly.status === 'encerrada' && assembly.ataGerada && (
             <Button variant="outline" asChild data-testid={`button-download-ata-${assembly.id}`}>

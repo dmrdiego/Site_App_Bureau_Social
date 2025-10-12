@@ -1,14 +1,80 @@
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Vote, Clock, CheckCircle2, XCircle } from "lucide-react";
-import { Link } from "wouter";
+import { Vote, Clock, CheckCircle2, XCircle, ThumbsUp, ThumbsDown, Minus } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { VotingItem } from "@shared/schema";
+
+function VotingButtons({ votingItemId }: { votingItemId: number }) {
+  const { toast } = useToast();
+  const [hasVoted, setHasVoted] = useState(false);
+
+  const voteMutation = useMutation({
+    mutationFn: async (voto: string) => {
+      const res = await apiRequest('POST', '/api/votes', {
+        votingItemId,
+        voto,
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Erro ao votar');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setHasVoted(true);
+      queryClient.invalidateQueries({ queryKey: ['/api/voting-items'] });
+      toast({
+        title: "Voto registado com sucesso",
+        description: "O seu voto foi registado",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao votar",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <div className="flex gap-3 pt-4 border-t flex-wrap">
+      <Button
+        onClick={() => voteMutation.mutate('a_favor')}
+        disabled={voteMutation.isPending || hasVoted}
+        variant="default"
+        data-testid={`button-vote-favor-${votingItemId}`}
+      >
+        <ThumbsUp className="h-4 w-4 mr-2" />
+        A Favor
+      </Button>
+      <Button
+        onClick={() => voteMutation.mutate('contra')}
+        disabled={voteMutation.isPending || hasVoted}
+        variant="destructive"
+        data-testid={`button-vote-contra-${votingItemId}`}
+      >
+        <ThumbsDown className="h-4 w-4 mr-2" />
+        Contra
+      </Button>
+      <Button
+        onClick={() => voteMutation.mutate('abstencao')}
+        disabled={voteMutation.isPending || hasVoted}
+        variant="outline"
+        data-testid={`button-vote-abstencao-${votingItemId}`}
+      >
+        <Minus className="h-4 w-4 mr-2" />
+        Abstenção
+      </Button>
+    </div>
+  );
+}
 
 export default function Votacoes() {
   const { toast } = useToast();
@@ -187,24 +253,9 @@ function VotingItemCard({ item }: { item: VotingItem }) {
           </div>
         )}
 
-        <div className="flex gap-3 pt-4 border-t">
-          {item.status === 'aberta' ? (
-            <Button asChild>
-              <Link href={`/votacoes/${item.id}`} data-testid={`button-votar-${item.id}`}>
-                <span className="flex items-center gap-2">
-                  <Vote className="h-4 w-4" />
-                  Votar Agora
-                </span>
-              </Link>
-            </Button>
-          ) : (
-            <Button variant="outline" asChild>
-              <Link href={`/votacoes/${item.id}`} data-testid={`button-ver-detalhes-${item.id}`}>
-                Ver Detalhes
-              </Link>
-            </Button>
-          )}
-        </div>
+        {item.status === 'aberta' && (
+          <VotingButtons votingItemId={item.id!} />
+        )}
       </CardContent>
     </Card>
   );

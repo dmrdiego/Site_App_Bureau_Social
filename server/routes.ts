@@ -640,6 +640,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // USERS (Admin only)
   // ============================================================================
 
+  // List users for proxy delegation (authenticated users only, limited data)
+  app.get("/api/users/for-proxy", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Return only safe fields for proxy selection
+      const safeUsers = users.map(u => ({
+        id: u.id,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        name: `${u.firstName} ${u.lastName}`,
+      }));
+      res.json(safeUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
   app.get("/api/users", requireAdmin, async (req: Request, res: Response) => {
     try {
       const users = await storage.getAllUsers();

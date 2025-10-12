@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
+import logoImage from "@assets/Pt-BS_1760236872718.png";
 
 export function PublicNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -14,9 +15,11 @@ export function PublicNav() {
           {/* Logo */}
           <Link href="/" data-testid="link-home">
             <div className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-1 -ml-2 cursor-pointer">
-              <div className="w-10 h-10 bg-primary rounded-md flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">BS</span>
-              </div>
+              <img 
+                src={logoImage} 
+                alt="Bureau Social" 
+                className="w-10 h-10 object-contain"
+              />
               <div className="hidden sm:block">
                 <div className="font-bold text-foreground">Bureau Social</div>
                 <div className="text-xs text-muted-foreground">Instituto Português de Negócios Sociais</div>

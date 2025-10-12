@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import logoImage from "@assets/Pt-BS_1760236872718.png";
 
 export function AppSidebar() {
   const [location] = useLocation();
@@ -50,9 +51,11 @@ export function AppSidebar() {
       <SidebarHeader className="p-4 border-b">
         <Link href="/dashboard" data-testid="link-sidebar-logo">
           <div className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md p-2 -m-2 cursor-pointer">
-            <div className="w-10 h-10 bg-sidebar-primary rounded-md flex items-center justify-center">
-              <span className="text-sidebar-primary-foreground font-bold text-lg">BS</span>
-            </div>
+            <img 
+              src={logoImage} 
+              alt="Bureau Social" 
+              className="w-10 h-10 object-contain"
+            />
             <div>
               <div className="font-bold text-sidebar-foreground">Bureau Social</div>
               <div className="text-xs text-muted-foreground">Portal Associados</div>
