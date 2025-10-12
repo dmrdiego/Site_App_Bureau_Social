@@ -38,7 +38,7 @@ The application is built with a clear separation of concerns, utilizing a full-s
 - **Storage Layer**: A `DbStorage` class implements an `IStorage` interface with 33 methods for all CRUD operations across core entities.
 
 ### Database Schema (shared/schema.ts)
-The database comprises 10 core tables:
+The database comprises 11 core tables:
 - **users**: User accounts with Bureau Social-specific extensions (e.g., `isAdmin`, `isDirecao`).
 - **sessions**: Stores user session data.
 - **assemblies**: Manages general assembly details.
@@ -49,15 +49,18 @@ The database comprises 10 core tables:
 - **notifications**: Handles user notifications.
 - **cms_content**: Stores editable content for website sections.
 - **object_entities**: Tracks files stored in Replit Object Storage.
+- **proxies**: Manages vote delegation/proxy system (giverId, receiverId, assemblyId, revokedAt).
 
 ### Key Features
 - **Public Website**: Hero, Mission, Services, Projects, Impact Stats, Contact, Footer sections, all dynamically loaded from CMS.
-- **Member Portal**: Dashboard, Assembly management (view, create, attendance), Online voting with results, Document repository (categorized), User profile, Real-time notifications, PDF minutes generation and download.
-- **Admin Features**: CMS content editor, user management, assembly creation, document upload, PDF minutes generation (admin/direção), and system configuration.
+- **Member Portal**: Dashboard, Assembly management (view, create, attendance), Online voting with results, Document repository (categorized), User profile, Real-time notifications, PDF minutes generation and download, Proxy/delegation system.
+- **Admin Features**: CMS content editor, user management, assembly creation, document upload, PDF minutes generation (admin/direção), proxy auditing, and system configuration.
 - **Authentication Flow**: OIDC with PKCE, user upsertion, session creation, and redirection to dashboard.
 - **Document Management**: Upload, categorization, and download of documents, supporting both local and object storage files.
 - **PDF Minutes Generation**: Institutional-branded PDF generation with assembly details, participants (with roles), voting items, and results. Stored in Object Storage with download functionality.
+- **Proxy/Delegation System**: Members can delegate their vote to another member for specific assemblies. Includes anti-loop validation, vote weighting, visual badges, and admin auditing. Delegators cannot vote directly while proxy is active.
 - **CMS Content Seeding**: Pre-populated content for landing page sections with robust fallbacks.
+- **Branding**: Custom logo (Pt-BS_1760236872718.png) displayed in sidebar and public navigation.
 
 ## External Dependencies
 
@@ -152,3 +155,81 @@ Comprehensive end-to-end testing completed using Playwright:
 1. Fixed apiRequest call signature: changed from (url, method, data) to (method, url, data)
 2. Fixed PDF download buffer handling: proper destructuring [fileBytes] = result.value
 3. Added missing getDocumentsByAssembly storage method
+
+### Proxy/Delegation System - COMPLETED ✅
+**Implementation Details:**
+1. **Database Schema (shared/schema.ts)**:
+   - Added `proxies` table with fields: id, giverId, receiverId, assemblyId, createdAt, revokedAt
+   - Active proxies: revokedAt IS NULL
+   - Revoked proxies: revokedAt IS NOT NULL
+
+2. **Storage Layer (server/storage.ts)**:
+   - `createProxy()`: Create new proxy delegation
+   - `getActiveProxyForUser()`: Get user's active proxy for assembly
+   - `getProxiesReceivedByUser()`: Get proxies delegated to user
+   - `getProxiesByAssembly()`: Get all proxies for assembly (with option to include revoked)
+   - `revokeProxy()`: Revoke active proxy
+   - `checkProxyLoop()`: Recursive validation to prevent circular delegation (A→B→C→A)
+
+3. **API Endpoints (server/routes.ts)**:
+   - `POST /api/assemblies/:id/proxies` (requireAuth)
+     - Create: {receiverId: number} - validates anti-loop, anti self-delegation
+     - Revoke: {} (empty body) - revokes active proxy
+   - `GET /api/assemblies/:id/my-proxies` (requireAuth)
+     - Returns: {given?: {receiverId, receiverName}, received?: [{giverId, giverName}]}
+   - `GET /api/assemblies/:id/proxies` (requireAdmin)
+     - Admin-only endpoint for auditing, includes revoked proxies
+   - `GET /api/users/for-proxy` (requireAuth)
+     - Lists users for proxy selection (safe fields only)
+
+4. **Vote Counting Enhancement**:
+   - `POST /api/votes` now validates if user has active proxy
+   - Rejects with 400: "Não pode votar porque delegou o seu voto. Revogue a procuração para poder votar."
+   - `GET /api/voting-items/:id/results` calculates vote weight: 1 + number of received proxies
+   - Ensures no double-counting (delegator blocked from voting)
+
+5. **Frontend (client/src/pages/Assemblies.tsx)**:
+   - `ProxyDialog` component: Modal for managing proxies
+     - Select from available users
+     - "Criar Procuração" button (data-testid="button-submit-proxy")
+     - "Revogar Procuração" button (data-testid="button-revoke-proxy") - only visible if active
+     - Shows received proxies (read-only)
+   - Visual badges on AssemblyCard:
+     - "Procuração dada" badge (data-testid="badge-procuracao-dada-{id}") - shows receiver name
+     - "Procurações recebidas" badge (data-testid="badge-procuracoes-recebidas-{id}") - shows count
+   - Trigger button: "Procuração" (data-testid="button-procuracao-{id}") - only for agendada assemblies
+
+6. **Voting UI Enhancement (client/src/pages/Votacoes.tsx)**:
+   - Removed broken detail page routes
+   - Added inline voting buttons: A Favor, Contra, Abstenção
+   - Each button: data-testid="button-vote-{tipo}-{votingItemId}"
+   - Buttons disabled after voting (useState hasVoted)
+   - Mutation shows proxy error if user has delegated vote
+
+**Business Rules:**
+- Cannot delegate to self
+- Cannot create circular delegation loops (A→B→C→A)
+- Only 1 active proxy per assembly per user
+- **CRITICAL**: User who delegated vote cannot vote directly (backend validation)
+- Revoking proxy allows user to vote again
+- Vote weight = 1 + number of proxies received
+- Admin can audit all proxies including revoked ones
+
+**Testing:**
+- Manual testing completed
+- Anti-loop validation tested and working
+- Double-counting bug fixed (delegators blocked from voting)
+- Badge visualization confirmed
+- Toast messages validated
+
+### Logo Update - COMPLETED ✅
+**Implementation Details:**
+1. **Asset**: `Pt-BS_1760236872718.png` added to attached_assets
+2. **AppSidebar.tsx**: Logo displayed in portal sidebar
+   - Import: `import logoImage from "@assets/Pt-BS_1760236872718.png"`
+   - Implementation: `<img src={logoImage} alt="Bureau Social" className="w-10 h-10 object-contain" />`
+3. **PublicNav.tsx**: Logo displayed in public navigation
+   - Same implementation as sidebar
+   - Maintains consistent branding across public and authenticated areas
+4. **Accessibility**: Alt text "Bureau Social" for screen readers
+5. **Styling**: `object-contain` preserves aspect ratio, `w-10 h-10` maintains consistent sizing
