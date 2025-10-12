@@ -1,6 +1,6 @@
 # 📊 Bureau Social - Status do Projeto
 
-**Última atualização**: 11 de Outubro de 2025
+**Última atualização**: 12 de Outubro de 2025, 15:30
 
 ---
 
@@ -35,6 +35,7 @@
 **Status**: 🟡 In Progress  
 **Prioridade**: 🔥 Alta  
 **Estimativa**: 2-3 horas  
+**Prazo Previsto**: 12 de Outubro de 2025, 18:00  
 
 **Descrição**: Publicar aplicação no Replit para testar fluxo completo de autenticação em ambiente real, já que OIDC não funciona em desenvolvimento.
 
@@ -64,7 +65,8 @@
 ### 2️⃣ Testes E2E do Portal de Membros
 **Status**: 🔴 To Do  
 **Prioridade**: 🔥 Alta  
-**Estimativa**: 3-4 horas
+**Estimativa**: 3-4 horas  
+**Prazo Previsto**: 13 de Outubro de 2025, 12:00
 
 **Descrição**: Criar suite de testes Playwright para validar fluxos críticos do portal (dashboard, assembleias, votação, documentos).
 
@@ -81,7 +83,8 @@
 ### 3️⃣ Geração de Atas em PDF
 **Status**: 🔴 To Do  
 **Prioridade**: 🔥 Alta  
-**Estimativa**: 4-5 horas
+**Estimativa**: 4-5 horas  
+**Prazo Previsto**: 14 de Outubro de 2025, 12:00
 
 **Descrição**: Implementar geração automática de atas de assembleias em formato PDF com informações completas (participantes, votações, decisões).
 
@@ -98,7 +101,8 @@
 ### 4️⃣ Sistema de Procurações (Proxies)
 **Status**: 🔴 To Do  
 **Prioridade**: ⚡ Média  
-**Estimativa**: 5-6 horas
+**Estimativa**: 5-6 horas  
+**Prazo Previsto**: 15 de Outubro de 2025, 14:00
 
 **Descrição**: Permitir que associados deleguem o seu voto a outro membro para assembleias específicas.
 
@@ -115,7 +119,8 @@
 ### 5️⃣ Votação Secreta
 **Status**: 🔴 To Do  
 **Prioridade**: ⚡ Média  
-**Estimativa**: 3-4 horas
+**Estimativa**: 3-4 horas  
+**Prazo Previsto**: 16 de Outubro de 2025, 10:00
 
 **Descrição**: Implementar mecanismo de votação anónima onde só o resultado agregado é visível.
 
@@ -131,7 +136,8 @@
 ### 6️⃣ Sistema de Quotas
 **Status**: 🔴 To Do  
 **Prioridade**: ⚡ Média  
-**Estimativa**: 4-5 horas
+**Estimativa**: 4-5 horas  
+**Prazo Previsto**: 17 de Outubro de 2025, 12:00
 
 **Descrição**: Gestão de quotas anuais dos associados com controlo de pagamentos e estados.
 
@@ -148,7 +154,8 @@
 ### 7️⃣ Notificações por Email
 **Status**: 🔴 To Do  
 **Prioridade**: 💡 Baixa  
-**Estimativa**: 3-4 horas
+**Estimativa**: 3-4 horas  
+**Prazo Previsto**: 18 de Outubro de 2025, 10:00
 
 **Descrição**: Enviar emails automáticos para eventos importantes (novas assembleias, votações, lembretes).
 
@@ -165,7 +172,8 @@
 ### 8️⃣ Relatórios e Exportações
 **Status**: 🔴 To Do  
 **Prioridade**: 💡 Baixa  
-**Estimativa**: 4-5 horas
+**Estimativa**: 4-5 horas  
+**Prazo Previsto**: 19 de Outubro de 2025, 12:00
 
 **Descrição**: Gerar relatórios administrativos (participação, votações, quotas) e permitir exportação em CSV/Excel.
 
@@ -182,7 +190,8 @@
 ### 9️⃣ Otimizações de Performance
 **Status**: 🔴 To Do  
 **Prioridade**: 💡 Baixa  
-**Estimativa**: 2-3 horas
+**Estimativa**: 2-3 horas  
+**Prazo Previsto**: 20 de Outubro de 2025, 10:00
 
 **Descrição**: Melhorar tempo de carregamento e responsividade da aplicação.
 
@@ -199,7 +208,8 @@
 ### 🔟 Documentação de API
 **Status**: 🔴 To Do  
 **Prioridade**: 💡 Baixa  
-**Estimativa**: 2-3 horas
+**Estimativa**: 2-3 horas  
+**Prazo Previsto**: 21 de Outubro de 2025, 10:00
 
 **Descrição**: Documentar todos os endpoints REST para facilitar manutenção e integrações futuras.
 
@@ -233,7 +243,9 @@
 - Estimativas podem variar conforme complexidade encontrada
 - Prioridades podem ser ajustadas conforme feedback do utilizador
 - Tarefas adicionais podem ser inseridas conforme necessário
+- **Prazos Previstos**: Atualizados automaticamente quando há mudança de status ou reavaliação de complexidade
 
 ---
 
-**Última revisão**: Tarefa 0/10 concluída | Próxima: Deploy para Produção
+**Última revisão**: Tarefa 0/10 concluída | Próxima: Deploy para Produção  
+**⏰ Próximo Prazo**: 12 de Outubro de 2025, 18:00 (Deploy para Produção)
