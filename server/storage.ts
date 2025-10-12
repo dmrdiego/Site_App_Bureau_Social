@@ -64,6 +64,7 @@ export interface IStorage {
   getDocumentById(id: number): Promise<Document | undefined>;
   createDocument(document: InsertDocument): Promise<Document>;
   getDocumentsByType(type: string): Promise<Document[]>;
+  getDocumentsByAssembly(assemblyId: number): Promise<Document[]>;
 
   // Presences
   createPresence(presence: InsertPresence): Promise<Presence>;
@@ -239,6 +240,14 @@ export class DbStorage implements IStorage {
       .select()
       .from(documents)
       .where(eq(documents.tipo, type))
+      .orderBy(desc(documents.createdAt));
+  }
+
+  async getDocumentsByAssembly(assemblyId: number): Promise<Document[]> {
+    return await db
+      .select()
+      .from(documents)
+      .where(eq(documents.assemblyId, assemblyId))
       .orderBy(desc(documents.createdAt));
   }
 

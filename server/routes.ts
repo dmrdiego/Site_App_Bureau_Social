@@ -584,6 +584,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = user.claims.sub;
       
       const dbUser = await storage.getUser(userId);
+      
       if (!dbUser?.isAdmin && !dbUser?.isDirecao) {
         return res.status(403).json({ message: "403: Forbidden - Admin or Direção access required" });
       }

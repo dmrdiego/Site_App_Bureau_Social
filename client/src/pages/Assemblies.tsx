@@ -92,7 +92,7 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
 
   const generateMinutes = useMutation({
     mutationFn: async (assemblyId: number) => {
-      const res = await apiRequest(`/api/assemblies/${assemblyId}/generate-minutes`, 'POST');
+      const res = await apiRequest('POST', `/api/assemblies/${assemblyId}/generate-minutes`);
       if (!res.ok) {
         throw new Error(await res.text());
       }
@@ -105,10 +105,10 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
         description: "A ata foi gerada e está disponível para download",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Erro ao gerar ata",
-        description: "Ocorreu um erro ao gerar a ata",
+        description: error.message || "Ocorreu um erro ao gerar a ata",
         variant: "destructive",
       });
     },
