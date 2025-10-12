@@ -6,6 +6,7 @@ import { Client } from "@replit/object-storage";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import type { User } from "@shared/schema";
+import { generateAssemblyMinutesPDF } from "./pdfGenerator";
 import {
   insertAssemblySchema,
   insertVotingItemSchema,
@@ -546,7 +547,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // MINUTES GENERATION (Atas)
   // ============================================================================
 
-  app.post("/api/assemblies/:id/generate-minutes", requireAdmin, async (req: Request, res: Response) => {
+  app.get("/api/assemblies/:id/download-minutes", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const assemblyId = parseInt(req.params.id);
+      
+      // Find the minutes document for this assembly
+      const documents = await storage.getDocumentsByAssembly(assemblyId);
+      const minutesDoc = documents.find(doc => doc.tipo === 'ata');
+      
+      if (!minutesDoc || !minutesDoc.filePath) {
+        return res.status(404).json({ message: "Minutes not found" });
+      }
+      
+      // Download from Object Storage
+      const client = new Client();
+      const result = await client.downloadAsBytes(minutesDoc.filePath);
+      
+      if (!result.ok) {
+        throw new Error(`Download failed: ${result.error}`);
+      }
+      
+      // Send PDF - result.value is a tuple [buffer, metadata]
+      const [fileBytes] = result.value;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${minutesDoc.titulo}.pdf"`);
+      res.send(fileBytes);
+    } catch (error) {
+      console.error("Minutes download error:", error);
+      res.status(500).json({ message: "Failed to download minutes" });
+    }
+  });
+
+  async function requireAdminOrDirecao(req: Request, res: Response, next: NextFunction) {
+    return isAuthenticated(req, res, async () => {
+      const user = req.user as any;
+      const userId = user.claims.sub;
+      
+      const dbUser = await storage.getUser(userId);
+      if (!dbUser?.isAdmin && !dbUser?.isDirecao) {
+        return res.status(403).json({ message: "403: Forbidden - Admin or Direção access required" });
+      }
+      next();
+    });
+  }
+
+  app.post("/api/assemblies/:id/generate-minutes", requireAdminOrDirecao, async (req: Request, res: Response) => {
     try {
       const assemblyId = parseInt(req.params.id);
       const assembly = await storage.getAssemblyById(assemblyId);
@@ -564,12 +609,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         presences
           .filter(p => p.presente)
           .map(async (p) => {
-            const user = await storage.getUser(p.userId);
+            const user = await storage.getUser(p.userId || '');
+            const role = user?.isAdmin ? 'Administrador' : user?.isDirecao ? 'Direção' : 'Associado';
             return {
-              userId: p.userId,
-              name: user ? `${user.firstName} ${user.lastName}` : p.userId,
+              userId: p.userId || '',
+              name: user ? `${user.firstName} ${user.lastName}` : p.userId || 'Desconhecido',
               email: user?.email || '',
-              role: user?.role || 'associado',
+              role,
             };
           })
       );
@@ -592,45 +638,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
 
-      // Generate basic minutes text with participant names
-      const minutesText = `
-ATA DA ASSEMBLEIA ${assembly.tipo.toUpperCase()}
-${assembly.titulo}
+      // Generate PDF
+      const pdfBuffer = await generateAssemblyMinutesPDF({
+        assembly,
+        attendees: attendeesWithDetails,
+        votingResults,
+      });
 
-Data: ${new Date(assembly.dataAssembleia).toLocaleDateString('pt-PT', { 
-  weekday: 'long', 
-  year: 'numeric', 
-  month: 'long', 
-  day: 'numeric' 
-})}
-Local: ${assembly.local || 'Não especificado'}
+      // Upload PDF to Object Storage
+      const client = new Client();
+      const filename = `ata-${assemblyId}-${Date.now()}.pdf`;
+      const privatePath = `${process.env.PRIVATE_OBJECT_DIR}/${filename}`;
+      
+      const uploadResult = await client.uploadFromBytes(privatePath, pdfBuffer);
+      
+      if (!uploadResult.ok) {
+        throw new Error(`PDF upload failed: ${uploadResult.error}`);
+      }
 
-PRESENÇAS (${attendeesWithDetails.length}):
-${attendeesWithDetails.map(a => `- ${a.name} (${a.email}) - ${a.role}`).join('\n')}
-
-ORDEM DE TRABALHOS:
-${assembly.ordemDia || 'Não especificada'}
-
-VOTAÇÕES REALIZADAS:
-${votingResults.map((vr, index) => `
-${index + 1}. ${vr.item.titulo}
-   Descrição: ${vr.item.descricao}
-   Resultados:
-   - Aprovar: ${vr.results.aprovar || 0}
-   - Rejeitar: ${vr.results.rejeitar || 0}
-   - Abstenção: ${vr.results.abstencao || 0}
-   Total de votos: ${vr.totalVotes}
-`).join('\n')}
-
-Ata gerada automaticamente pelo sistema Bureau Social.
-`;
-
-      // Create document for the minutes
+      // Create document record for the PDF
       const document = await storage.createDocument({
         titulo: `Ata - ${assembly.titulo}`,
         tipo: 'ata',
         assemblyId,
-        conteudo: minutesText,
+        filePath: privatePath,
         uploadedBy: getUserId(req),
       });
 
@@ -642,7 +673,7 @@ Ata gerada automaticamente pelo sistema Bureau Social.
       res.json({ 
         success: true, 
         document,
-        minutesText 
+        message: 'Ata gerada com sucesso',
       });
     } catch (error) {
       console.error("Minutes generation error:", error);

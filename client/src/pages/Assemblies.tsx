@@ -1,14 +1,15 @@
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, MapPin, Users, FileText, Plus } from "lucide-react";
+import { Calendar, MapPin, Users, FileText, Plus, Download } from "lucide-react";
 import { Link } from "wouter";
 import type { Assembly } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Assemblies() {
   const { toast } = useToast();
@@ -85,6 +86,34 @@ export default function Assemblies() {
 }
 
 function AssemblyCard({ assembly }: { assembly: Assembly }) {
+  const { toast } = useToast();
+  const { isAdmin, isDirecao } = useAuth();
+  const canGenerateMinutes = isAdmin || isDirecao;
+
+  const generateMinutes = useMutation({
+    mutationFn: async (assemblyId: number) => {
+      const res = await apiRequest(`/api/assemblies/${assemblyId}/generate-minutes`, 'POST');
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/assemblies"] });
+      toast({
+        title: "Ata gerada com sucesso",
+        description: "A ata foi gerada e está disponível para download",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao gerar ata",
+        description: "Ocorreu um erro ao gerar a ata",
+        variant: "destructive",
+      });
+    },
+  });
+
   const getStatusVariant = (status: string) => {
     const variants = {
       agendada: "default",
@@ -167,7 +196,7 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
           )}
         </div>
 
-        <div className="flex gap-3 pt-4 border-t">
+        <div className="flex gap-3 pt-4 border-t flex-wrap">
           <Button asChild>
             <Link href={`/assembleias/${assembly.id}`} data-testid={`button-detalhes-${assembly.id}`}>
               Ver Detalhes
@@ -178,6 +207,25 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
               <Link href={`/assembleias/${assembly.id}/presenca`} data-testid={`button-confirmar-${assembly.id}`}>
                 Confirmar Presença
               </Link>
+            </Button>
+          )}
+          {assembly.status === 'encerrada' && assembly.ataGerada && (
+            <Button variant="outline" asChild data-testid={`button-download-ata-${assembly.id}`}>
+              <a href={`/api/assemblies/${assembly.id}/download-minutes`}>
+                <Download className="h-4 w-4 mr-2" />
+                Download Ata
+              </a>
+            </Button>
+          )}
+          {assembly.status === 'encerrada' && !assembly.ataGerada && canGenerateMinutes && (
+            <Button 
+              variant="outline" 
+              onClick={() => generateMinutes.mutate(assembly.id!)}
+              disabled={generateMinutes.isPending}
+              data-testid={`button-gerar-ata-${assembly.id}`}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              {generateMinutes.isPending ? 'A gerar...' : 'Gerar Ata'}
             </Button>
           )}
         </div>
