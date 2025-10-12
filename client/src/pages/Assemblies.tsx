@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, MapPin, Users, FileText, Plus, Download } from "lucide-react";
+import { Calendar, MapPin, Users, FileText, Plus, Download, UserCheck, X } from "lucide-react";
 import { Link } from "wouter";
-import type { Assembly } from "@shared/schema";
+import type { Assembly, User } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Assemblies() {
   const { toast } = useToast();
