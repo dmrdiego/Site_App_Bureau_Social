@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 
 // Configurações
 const STATUS_FILE = path.join(__dirname, 'STATUS.md');
+const COMANDOS_FILE = path.join(__dirname, 'COMANDOS.md');
 const TARGET_DATE = new Date('2026-01-01T23:59:59');
 
 // Formato de data em português
@@ -62,5 +63,29 @@ function updateStatus() {
   }
 }
 
+// Atualizar COMANDOS.md
+function updateComandos() {
+  try {
+    const now = new Date();
+    
+    let content = fs.readFileSync(COMANDOS_FILE, 'utf8');
+    
+    // Atualizar timestamp (formato completo: "12 de Outubro de 2025, 17:45")
+    content = content.replace(
+      /\*\*Última atualização\*\*: .+/,
+      `**Última atualização**: ${formatDate(now)}`
+    );
+    
+    fs.writeFileSync(COMANDOS_FILE, content, 'utf8');
+    
+    console.log(`✅ COMANDOS.md atualizado: ${formatDate(now)}`);
+    
+  } catch (error) {
+    console.error('❌ Erro ao atualizar COMANDOS.md:', error.message);
+    process.exit(1);
+  }
+}
+
 // Executar
 updateStatus();
+updateComandos();

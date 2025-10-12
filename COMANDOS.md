@@ -4,6 +4,111 @@ Comandos necessários para executar as 10 tarefas prioritárias do projeto.
 
 ---
 
+## 🔐 Autenticação e Gestão de Utilizadores
+
+### Como Funciona o Login
+
+O sistema usa **Replit Auth (OIDC)** - o login é **automático** através da conta Replit:
+
+1. **Aceder à aplicação**: https://pt-bureausocial.replit.app (ou localhost:5000)
+2. **Clicar em "Entrar"**: Redireciona para autenticação Replit
+3. **Login automático**: Se já estiver logado no Replit, entra automaticamente
+4. **Primeiro acesso**: Utilizador é criado automaticamente na BD como `contribuinte` normal
+
+### Login como Administrador
+
+Para ter permissões de **administrador**, o utilizador precisa ter `is_admin = true` na base de dados:
+
+```bash
+# 1. Fazer login normal primeiro (para criar o utilizador na BD)
+# 2. Descobrir o ID do utilizador (ver seu email no perfil)
+# 3. Atualizar permissões na BD:
+
+# Ver utilizadores existentes
+psql $DATABASE_URL -c "SELECT id, email, first_name, is_admin, is_direcao FROM users;"
+
+# Tornar um utilizador ADMIN (substituir SEU_USER_ID pelo ID real)
+psql $DATABASE_URL -c "UPDATE users SET is_admin = true WHERE email = 'seu_email@example.com';"
+
+# Tornar um utilizador DIREÇÃO (pode gerar atas, mas não é admin total)
+psql $DATABASE_URL -c "UPDATE users SET is_direcao = true WHERE email = 'seu_email@example.com';"
+
+# Tornar ADMIN + DIREÇÃO (permissões completas)
+psql $DATABASE_URL -c "UPDATE users SET is_admin = true, is_direcao = true WHERE email = 'seu_email@example.com';"
+```
+
+### Login como Utilizador Normal
+
+**Utilizadores normais** são criados automaticamente ao fazer login:
+
+1. Aceder à aplicação e clicar em "Entrar"
+2. Fazer login com conta Replit
+3. **Automaticamente criado** com:
+   - `is_admin = false`
+   - `is_direcao = false`
+   - `categoria = 'contribuinte'`
+   - `ativo = true`
+
+### Tipos de Utilizadores
+
+| Tipo | is_admin | is_direcao | Permissões |
+|------|----------|------------|------------|
+| **Admin** | ✅ `true` | ✅ `true` | Tudo (CMS, criar assembleias, gerar atas, gerir users) |
+| **Direção** | ❌ `false` | ✅ `true` | Gerar atas, criar assembleias, ver tudo |
+| **Contribuinte** | ❌ `false` | ❌ `false` | Ver assembleias, votar, download docs, perfil |
+
+### Comandos Úteis de Gestão de Utilizadores
+
+```bash
+# Listar todos os utilizadores
+psql $DATABASE_URL -c "SELECT id, email, first_name, last_name, is_admin, is_direcao, categoria, ativo FROM users ORDER BY created_at DESC;"
+
+# Criar utilizador manualmente (não recomendado - deixar o OIDC criar)
+# O sistema cria automaticamente ao fazer login
+
+# Desativar utilizador
+psql $DATABASE_URL -c "UPDATE users SET ativo = false WHERE email = 'user@example.com';"
+
+# Reativar utilizador
+psql $DATABASE_URL -c "UPDATE users SET ativo = true WHERE email = 'user@example.com';"
+
+# Mudar categoria do utilizador
+psql $DATABASE_URL -c "UPDATE users SET categoria = 'fundador' WHERE email = 'user@example.com';"
+# Categorias: 'contribuinte', 'efetivo', 'fundador', 'honorario'
+
+# Remover permissões de admin
+psql $DATABASE_URL -c "UPDATE users SET is_admin = false, is_direcao = false WHERE email = 'user@example.com';"
+```
+
+### Testar Permissões
+
+```bash
+# 1. Login como admin (atualizar BD primeiro com comandos acima)
+# 2. Verificar acesso ao CMS Editor (sidebar esquerda)
+# 3. Verificar botão "Gerar Ata" em assembleias encerradas
+# 4. Verificar acesso a "Gerir Associados"
+
+# Login como utilizador normal
+# 1. Login normal (automaticamente contribuinte)
+# 2. NÃO deve ver CMS Editor na sidebar
+# 3. NÃO deve ver "Gerar Ata" 
+# 4. Deve poder votar e ver documentos
+```
+
+### Utilizadores de Teste Existentes
+
+```bash
+# Ver utilizadores admin existentes
+psql $DATABASE_URL -c "SELECT email, first_name, is_admin, is_direcao FROM users WHERE is_admin = true;"
+
+# Exemplos na BD atual:
+# - admin2@bureausocial.pt (Admin + Direção)
+# - admin3@bureausocial.pt (Admin + Direção)
+# - user1@bureausocial.pt (Utilizador normal)
+```
+
+---
+
 ## 1️⃣ Deploy para Produção e Testes OIDC
 
 ### Verificar Variáveis de Ambiente
@@ -376,4 +481,4 @@ npm run build && echo "✅ Build OK" || echo "❌ Build FAIL"
 
 ---
 
-**Última atualização**: 11 de Outubro de 2025
+**Última atualização**: 12 de Outubro de 2025, 02:03

@@ -1,6 +1,6 @@
 # 📊 Bureau Social - Status do Projeto
 
-**Última atualização**: 12 de Outubro de 2025, 17:30
+**Última atualização**: 12 de Outubro de 2025, 02:03
 
 ---
 
@@ -266,6 +266,6 @@
 ---
 
 **Última revisão**: Tarefas 1-3/10 concluídas (Testes E2E ✓ | Deploy ✓ | PDFs de Atas ✓)  
-**⏰ Próximo Prazo**: 1 de Janeiro de 2026, 23:59 (faltam 81 dias)  
+**⏰ Próximo Prazo**: 1 de Janeiro de 2026, 23:59 (faltam 82 dias)
 **🎯 Data de Publicação**: 1 de Janeiro de 2026  
 **🌐 Produção**: https://pt-bureausocial.replit.app
