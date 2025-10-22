@@ -69,7 +69,7 @@ export function createNovaAssembleiaEmail(userName: string, assembleia: {
             <div class="highlight">
               <h2>${assembleia.titulo}</h2>
               <p><strong>Data e Hora:</strong> ${dataFormatada}</p>
-              <p><strong>📍 Local:</strong> ${assembleia.localizacao}</p>
+              <p><strong>Local:</strong> ${assembleia.localizacao}</p>
               ${assembleia.descricao ? `<p><strong>Descrição:</strong> ${assembleia.descricao}</p>` : ''}
             </div>
 
@@ -165,7 +165,7 @@ export function createProcuracaoRecebidaEmail(userName: string, giverName: strin
             <p>Recebeu uma procuração para votar em nome de outro associado.</p>
             
             <div class="highlight">
-              <p><strong>👤 Associado:</strong> ${giverName}</p>
+              <p><strong>Associado:</strong> ${giverName}</p>
               <p><strong>Assembleia:</strong> ${assembleia.titulo}</p>
               <p><strong>Data e Hora:</strong> ${dataFormatada}</p>
             </div>

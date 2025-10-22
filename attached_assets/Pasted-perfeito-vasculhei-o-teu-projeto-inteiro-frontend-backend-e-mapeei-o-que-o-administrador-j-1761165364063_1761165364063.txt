@@ -1,0 +1,307 @@
+perfeito — vasculhei o teu projeto inteiro (frontend + backend) e mapeei o que o **administrador** já consegue fazer e onde dá para melhorar a **usabilidade** e **funcionalidades** (upload/remoção de documentos, envios de e-mail aos associados, etc.). Vou te entregar:
+
+1. o que já existe hoje (por área)
+2. os principais “gaps” de UX/funcionalidade
+3. um plano de melhorias (priorizado)
+4. trechos de código prontos para implementar rápido
+
+---
+
+## 1) O que o admin já tem hoje
+
+### Navegação/Apps
+
+* **Dashboard** (`/dashboard`): visão geral (resumo de assembleias, documentos, notificações).
+* **Assembleias** (`/assembleias`, `/assembleias/nova`): cria e edita assembleias; gere presenças e **procurações** (delegações); gera **ata em PDF** e disponibiliza para download.
+* **Votações**: cria **pautas/itens de voto**, recolhe votos e calcula **resultados** com peso (considera procurações).
+* **Documentos**: lista e faz **download** de documentos (com tipos: “ata”, “regulamento”, “relatório”; visibilidade: “todos/admin/direção”; associação a uma assembleia).
+* **Associados**: listagem e gestão de **usuários**; filtragem/for-proxy; atualização de status/role.
+* **CMS**: edita **seções públicas** do site (landing/home, missão, serviços, projetos etc.).
+* **Perfil/Configurações**: preferências de tema, dados do usuário.
+
+### Backend (resumo dos endpoints sensíveis ao admin)
+
+* **Assembleias:** `GET/POST/PUT /api/assemblies*`, presenças `GET/POST`, **geração/baixa de ata** (`/download-minutes` / `generate-minutes`), procurações (`/proxies`).
+* **Votações:** criar itens, lançar votos, **apurar resultados**.
+* **Documentos:** `GET /api/documents`, `GET /api/documents/:id`, `GET /api/documents/:id/download` (👉 **aqui não há POST/DELETE ainda**).
+* **Users (admin):** `GET /api/admin/users`, `PATCH /api/admin/users/:id`.
+* **CMS:** `GET /api/cms/:sectionKey`, `PUT /api/cms`.
+* **Notificações:** `GET /api/notifications`, `PUT /api/notifications/:id/read`.
+* **E-mail:** serviço com **Resend** (`RESEND_API_KEY`) e **templates prontos** para:
+
+  * “Nova Assembleia”
+  * “Ata disponível”
+  * “Procuração recebida”
+    (envio **assíncrono** após criar assembleia, etc.)
+
+---
+
+## 2) Gaps de UX/funcionalidade para Administrador
+
+1. **Documentos**
+
+   * Falta **upload** (POST) e **exclusão** (DELETE) via API + UI (atualmente só listar/baixar).
+   * Falta **edição de metadados** (título, tipo, visibilidade, associação à assembleia).
+   * Falta **filtro por tipo/visibilidade/assembleia** e **busca** na UI.
+
+2. **E-mails para associados**
+
+   * Há envios automáticos para alguns eventos, mas falta um **envio administrativo em massa** (boletins/comunicados), com:
+
+     * Preview, teste para um e-mail, logs de envio, contagem de destinatários.
+     * Seleção de **segmento** (todos, só ativos, só direção, por presença numa assembleia, etc.).
+
+3. **Assembleias & Votações**
+
+   * Em assembleias: melhorar **checagem de conflitos** nas procurações (o backend já tem função de loop-check; expor feedback claro na UI).
+   * Em votações: adicionar **rótulos de estado** (agendada/aberta/encerrada), **confirmação antes de encerrar**, **export CSV** de resultados.
+
+4. **CMS**
+
+   * Adicionar **versionamento simples** (guardar histórico e permitir “reverter”).
+   * **Preview** antes de publicar.
+
+5. **Admin UX geral**
+
+   * **Pesquisa global** (K-bar) para encontrar associado, documento, assembleia.
+   * **Ações em massa**: ativar/inativar associados; enviar e-mail a um subset selecionado; apagar múltiplos documentos.
+   * **Feedback de sistema**: toasts com detalhes (ex.: quantos e-mails enviados com sucesso/falhas, link para logs).
+
+---
+
+## 3) Roadmap priorizado (prático)
+
+### P0 — Documentos (CRUD completo)
+
+* [ ] API: **POST /api/documents** (upload via `multer` + object storage), **DELETE /api/documents/:id**, **PUT /api/documents/:id** (metadados).
+* [ ] UI (página **Documentos**):
+
+  * [ ] Botão **“Enviar documentos”** (multi-arquivo, 10MB por arquivo).
+  * [ ] **Tabela** com filtros (tipo, visível para, assembleia) + busca por título.
+  * [ ] Ações por item: **Baixar / Editar / Excluir**.
+  * [ ] **Ações em massa** (seleção + excluir).
+  * [ ] Indicar **tamanho** e **quem fez upload**.
+
+### P1 — E-mail administrativo
+
+* [ ] API: `POST /api/admin/email/broadcast` (segmentos + template + assunto + HTML/Markdown).
+* [ ] UI: tela “**Comunicações**”
+
+  * [ ] Form: assunto + editor (Markdown/HTML) + segmento (todos/ativos/direção/custom query).
+  * [ ] **Preview**, **Enviar teste**, **Enviar**.
+  * [ ] Mostrar **progresso** e **logs** (sucesso/falha por e-mail).
+* [ ] Segurança/limites: rate-limit e logs; fallback de fila (retries).
+
+### P2 — Votações & Assembleias (UX)
+
+* [ ] “**Encerrar votação**” com modal de confirmação e resumo.
+* [ ] **Export CSV** de resultados e presenças.
+* [ ] UI de procurações: badge de conflitos (exibe quem delega para quem; detecta ciclo/loop) e **resolver**/revogar com 1 clique.
+
+### P3 — CMS & Qualidade de Vida
+
+* [ ] Versionamento simples (salvar snapshots) + **Preview**.
+* [ ] Pesquisa global (K-bar) + atalhos.
+* [ ] Acessibilidade: foco/labels/atalhos; avisos de contraste.
+
+---
+
+## 4) Implementações rápidas (código)
+
+### 4.1 Rotas de **Documentos** (backend – `server/routes.ts`)
+
+> Usa `multer` (já importado) + storage S3/Object-Storage (você já usa `@replit/object-storage`).
+
+```ts
+// Upload (admin)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+app.post("/api/documents", requireAdmin, upload.single("file"), async (req, res) => {
+  try {
+    const { titulo, tipo, visivelPara = "todos", assemblyId } = req.body;
+    if (!req.file) return res.status(400).json({ message: "Arquivo é obrigatório" });
+
+    // grava no object storage (ex.: bucket "docs/")
+    const key = `docs/${Date.now()}_${req.file.originalname}`;
+    await objectClient.upload(key, req.file.buffer, { contentType: req.file.mimetype });
+
+    const doc = await storage.createDocument({
+      titulo,
+      tipo,
+      visivelPara,
+      assemblyId: assemblyId ? Number(assemblyId) : null,
+      filePath: key,
+      fileSize: req.file.size,
+      uploadedBy: getUserId(req),
+    });
+
+    res.status(201).json(doc);
+  } catch (e: any) {
+    res.status(500).json({ message: "Falha no upload", detail: e?.message });
+  }
+});
+
+// Update metadados
+app.put("/api/documents/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const partial = (({ titulo, tipo, visivelPara, assemblyId }) => ({ titulo, tipo, visivelPara, assemblyId }))(req.body);
+    const updated = await storage.updateDocument(id, partial);
+    res.json(updated);
+  } catch (e:any) {
+    res.status(500).json({ message: "Falha ao atualizar documento", detail: e?.message });
+  }
+});
+
+// Delete
+app.delete("/api/documents/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const doc = await storage.getDocumentById(id);
+    if (!doc) return res.status(404).json({ message: "Documento não encontrado" });
+
+    await objectClient.delete(doc.filePath);
+    await storage.deleteDocument(id);
+    res.status(204).end();
+  } catch (e:any) {
+    res.status(500).json({ message: "Falha ao excluir documento", detail: e?.message });
+  }
+});
+```
+
+> **DB/Storage**: no `server/storage.ts`, garanta que existam `createDocument`, `updateDocument`, `deleteDocument` (Drizzle já tem a tabela `documents` com `titulo`, `tipo`, `visivelPara`, `assemblyId`, `filePath`, `fileSize`, `uploadedBy`, `createdAt`).
+
+### 4.2 UI de **Documentos** (frontend – `client/src/pages/Documentos.tsx`)
+
+* Adicione:
+
+  * `<input type="file" multiple />` ou modal de upload (shadcn/ui `Dialog`).
+  * Tabela com colunas: **Título** / **Tipo** / **Visível para** / **Assembleia** / **Tamanho** / **Ações**.
+  * Filtros (Select) e busca.
+* Integração via `react-query`:
+
+```ts
+// listar
+const docsQuery = useQuery({ queryKey: ["documents"], queryFn: () => apiRequest("/api/documents").then(r => r.json()) });
+
+// upload
+const uploadMutation = useMutation({
+  mutationFn: async (formData: FormData) => fetch("/api/documents", { method: "POST", body: formData }),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] })
+});
+
+// delete
+const deleteMutation = useMutation({
+  mutationFn: async (id: number) => apiRequest(`/api/documents/${id}`, { method: "DELETE" }),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] })
+});
+```
+
+### 4.3 **Envio de e-mail** administrativo (backend)
+
+Reaproveita o `emailService.ts` (Resend) e cria endpoint:
+
+```ts
+app.post("/api/admin/email/broadcast", requireAdmin, async (req, res) => {
+  const { subject, html, segmento = "todos", testePara } = req.body;
+
+  // validações
+  if (!subject || !html) return res.status(400).json({ message: "subject e html são obrigatórios" });
+
+  // envio de teste
+  if (testePara) {
+    await sendEmail({ to: testePara, subject, html });
+    return res.json({ preview: true });
+  }
+
+  // seleção de destinatários
+  const all = await storage.getAllUsers();
+  const destinatarios = all.filter(u => {
+    if (segmento === "direcao") return u.papel === "direcao";
+    if (segmento === "ativos") return u.ativo;
+    return true; // todos
+  });
+
+  // envio em lotes simples (evita burst)
+  const chunk = 100;
+  for (let i = 0; i < destinatarios.length; i += chunk) {
+    const slice = destinatarios.slice(i, i + chunk);
+    await Promise.all(slice.map(u => sendEmail({ to: u.email, subject, html })));
+  }
+
+  res.json({ total: destinatarios.length });
+});
+```
+
+**UI (nova página “Comunicações”)**
+
+* Form com `subject`, editor (Markdown → HTML), `Select` de **segmento** (“Todos / Ativos / Direção / Custom”), botão “**Enviar teste**”, “**Enviar**”.
+* Mostrar **contador de destinatários** (prévia via `GET /api/admin/users?segmento=...`).
+* `react-query` para o POST; toast de sucesso/erro + link para **logs** (opcional: gravar em tabela `email_logs`).
+
+### 4.4 **Resultados de votação / Presenças — CSV**
+
+Endpoints simples:
+
+```ts
+app.get("/api/voting-items/:id/export", requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const rows = await storage.getVotesByVotingItem(id);
+  // monte um CSV com user, voto, peso
+  const csv = toCSV(rows);
+  res.type("text/csv").attachment(`votacao_${id}.csv`).send(csv);
+});
+
+app.get("/api/assemblies/:id/presences/export", requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const rows = await storage.getPresencesByAssembly(id);
+  const csv = toCSV(rows);
+  res.type("text/csv").attachment(`presencas_${id}.csv`).send(csv);
+});
+```
+
+---
+
+## 5) Ajustes no Replit (para essas novidades)
+
+* **Secrets**: além de `DATABASE_URL`, adicione `RESEND_API_KEY` (para e-mails) e, se proteger `/__debug`, use `SESSION_SECRET`.
+* **Dependências**:
+
+  ```
+  npm i multer cors helmet compression express-rate-limit
+  ```
+* **Build/Deploy**: o teu `.replit` já faz:
+
+  * build: `npm run build` (Vite + esbuild do server)
+  * run: `npm run start`
+    Verifica que os **novos endpoints** estejam no bundle (`dist/index.js`) após `npm run build`.
+* **Health/Debug**:
+
+  * `GET /health` → monitora autoscale.
+  * `GET /__debug?key=SESSION_SECRET` → diagnóstico (não esquecer de proteger em produção).
+
+---
+
+## 6) Checklist para “done”
+
+* [ ] Upload de documentos funcionando (UI + POST + persistência + aparece na lista).
+* [ ] Edição de metadados (PUT) e **excluir** (DELETE) com confirmação.
+* [ ] Filtros/busca em Documentos.
+* [ ] Envio de **e-mail em massa** com preview e teste; logs ok.
+* [ ] CSV de resultados e presenças baixando corretamente.
+* [ ] UX de procurações mostrando conflitos (se houver) e ação de resolver.
+* [ ] CMS com preview.
+* [ ] Healthcheck ok em produção; debug protegido.
+
+---
+
+Se quiser, eu te entrego **patches/diffs prontos** para:
+
+* `server/routes.ts` (documentos + broadcast e-mail + CSV + health/debug)
+* `client/src/pages/Documentos.tsx` (upload/filtros/ações)
+* nova página `client/src/pages/Comunicacoes.tsx`
+
+diz só “manda os diffs” e eu já te passo os blocos certinhos pra colar.
