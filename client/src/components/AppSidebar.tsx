@@ -10,6 +10,7 @@ import {
   UserCog,
   Edit3,
   LogOut,
+  Mail,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,7 @@ export function AppSidebar() {
 
   const adminItems = [
     { title: "Gerir Associados", url: "/admin/associados", icon: UserCog },
+    { title: "Comunicações", url: "/admin/comunicacoes", icon: Mail },
     { title: "CMS Editor", url: "/admin/cms", icon: Edit3 },
     { title: "Configurações", url: "/admin/config", icon: Settings },
   ];

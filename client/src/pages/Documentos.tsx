@@ -14,6 +14,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -22,14 +32,17 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileText, Download, Upload, X } from "lucide-react";
-import { queryClient } from "@/lib/queryClient";
+import { FileText, Download, Upload, X, Edit2, Trash2, Search } from "lucide-react";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Document as Doc } from "@shared/schema";
 
 export default function Documentos() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading, isAdmin, isDirecao } = useAuth();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterTipo, setFilterTipo] = useState<string>("todos");
+  const [filterVisibilidade, setFilterVisibilidade] = useState<string>("todos");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -53,14 +66,24 @@ export default function Documentos() {
     return <DocumentosSkeleton />;
   }
 
-  const canUpload = isAdmin || isDirecao;
+  const canManage = isAdmin || isDirecao;
 
-  const groupedDocs = documents?.reduce((acc, doc) => {
+  // Filter and search documents
+  const filteredDocs = documents?.filter(doc => {
+    const matchesSearch = doc.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         doc.categoria?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTipo = filterTipo === "todos" || doc.tipo === filterTipo;
+    const matchesVisibilidade = filterVisibilidade === "todos" || doc.visivelPara === filterVisibilidade;
+    
+    return matchesSearch && matchesTipo && matchesVisibilidade;
+  }) || [];
+
+  const groupedDocs = filteredDocs.reduce((acc, doc) => {
     const tipo = doc.tipo || 'outros';
     if (!acc[tipo]) acc[tipo] = [];
     acc[tipo].push(doc);
     return acc;
-  }, {} as Record<string, Doc[]>) || {};
+  }, {} as Record<string, Doc[]>);
 
   return (
     <div className="space-y-6">
@@ -71,7 +94,7 @@ export default function Documentos() {
             Aceda a atas, regulamentos e outros documentos importantes
           </p>
         </div>
-        {canUpload && (
+        {canManage && (
           <Button 
             onClick={() => setUploadDialogOpen(true)}
             data-testid="button-upload-documento"
@@ -82,9 +105,60 @@ export default function Documentos() {
         )}
       </div>
 
+      {/* Filters and Search */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="md:col-span-2">
+              <Label htmlFor="search">Buscar</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Buscar por título ou categoria..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                  data-testid="input-search"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="filter-tipo">Tipo</Label>
+              <Select value={filterTipo} onValueChange={setFilterTipo}>
+                <SelectTrigger id="filter-tipo" data-testid="select-filter-tipo">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="ata">Atas</SelectItem>
+                  <SelectItem value="regulamento">Regulamentos</SelectItem>
+                  <SelectItem value="relatorio">Relatórios</SelectItem>
+                  <SelectItem value="outro">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="filter-visibilidade">Visibilidade</Label>
+              <Select value={filterVisibilidade} onValueChange={setFilterVisibilidade}>
+                <SelectTrigger id="filter-visibilidade" data-testid="select-filter-visibilidade">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="direcao">Direção</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {isLoading ? (
         <DocumentosSkeleton />
-      ) : documents && documents.length > 0 ? (
+      ) : filteredDocs.length > 0 ? (
         <div className="space-y-8">
           {Object.entries(groupedDocs).map(([tipo, docs]) => (
             <div key={tipo}>
@@ -96,7 +170,7 @@ export default function Documentos() {
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {docs.map((doc) => (
-                  <DocumentCard key={doc.id} document={doc} />
+                  <DocumentCard key={doc.id} document={doc} canManage={canManage} />
                 ))}
               </div>
             </div>
@@ -107,16 +181,20 @@ export default function Documentos() {
           <CardContent className="text-center py-16">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              Nenhum documento disponível
+              {searchTerm || filterTipo !== "todos" || filterVisibilidade !== "todos" 
+                ? "Nenhum documento encontrado"
+                : "Nenhum documento disponível"}
             </h3>
             <p className="text-muted-foreground">
-              Os documentos aparecerão aqui quando forem carregados
+              {searchTerm || filterTipo !== "todos" || filterVisibilidade !== "todos"
+                ? "Tente ajustar os filtros de busca"
+                : "Os documentos aparecerão aqui quando forem carregados"}
             </p>
           </CardContent>
         </Card>
       )}
 
-      {canUpload && (
+      {canManage && (
         <UploadDialog 
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
@@ -126,10 +204,41 @@ export default function Documentos() {
   );
 }
 
-function DocumentCard({ document }: { document: Doc }) {
+function DocumentCard({ document, canManage }: { document: Doc; canManage: boolean }) {
+  const { toast } = useToast();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   const handleDownload = () => {
     window.open(`/api/documents/${document.id}/download`, '_blank');
   };
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/documents/${document.id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao excluir documento');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/documents'] });
+      toast({
+        title: "Sucesso",
+        description: "Documento excluído com sucesso!",
+      });
+      setDeleteDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return 'N/A';
@@ -139,47 +248,239 @@ function DocumentCard({ document }: { document: Doc }) {
   };
 
   return (
-    <Card className="hover-elevate active-elevate-2 transition-all duration-200">
-      <CardContent className="p-6">
-        <div className="flex items-start gap-4 mb-4">
-          <div className="w-12 h-12 bg-primary/10 rounded-md flex items-center justify-center flex-shrink-0">
-            <FileText className="h-6 w-6 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-foreground mb-1 truncate">
-              {document.titulo}
-            </h3>
-            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              <Badge variant="outline" className="text-xs">
-                {document.tipo}
-              </Badge>
-              <span>{formatFileSize(document.fileSize)}</span>
+    <>
+      <Card className="hover-elevate active-elevate-2 transition-all duration-200">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-md flex items-center justify-center flex-shrink-0">
+              <FileText className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground mb-1 truncate">
+                {document.titulo}
+              </h3>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                <Badge variant="outline" className="text-xs">
+                  {document.tipo}
+                </Badge>
+                <span>{formatFileSize(document.fileSize)}</span>
+              </div>
             </div>
           </div>
+
+          {document.categoria && (
+            <p className="text-sm text-muted-foreground mb-4">
+              {document.categoria}
+            </p>
+          )}
+
+          <div className="flex items-center justify-between pt-4 border-t">
+            <span className="text-sm text-muted-foreground">
+              {new Date(document.createdAt!).toLocaleDateString('pt-PT')}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleDownload}
+                data-testid={`button-download-${document.id}`}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+              {canManage && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setEditDialogOpen(true)}
+                    data-testid={`button-edit-${document.id}`}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    data-testid={`button-delete-${document.id}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog */}
+      {canManage && (
+        <EditDocumentDialog
+          document={document}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+        />
+      )}
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Documento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir "{document.titulo}"? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              {deleteMutation.isPending ? "A excluir..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+function EditDocumentDialog({ 
+  document, 
+  open, 
+  onOpenChange 
+}: { 
+  document: Doc; 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { toast } = useToast();
+  const [titulo, setTitulo] = useState(document.titulo);
+  const [tipo, setTipo] = useState(document.tipo);
+  const [categoria, setCategoria] = useState(document.categoria || "");
+  const [visivelPara, setVisivelPara] = useState(document.visivelPara);
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/documents/${document.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo,
+          tipo,
+          categoria: categoria || null,
+          visivelPara,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha ao atualizar documento');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/documents'] });
+      toast({
+        title: "Sucesso",
+        description: "Documento atualizado com sucesso!",
+      });
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!titulo || !tipo) {
+      toast({
+        title: "Erro",
+        description: "Título e tipo são obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+    updateMutation.mutate();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar Documento</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="edit-titulo">Título *</Label>
+            <Input
+              id="edit-titulo"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              data-testid="input-edit-titulo"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="edit-tipo">Tipo *</Label>
+            <Select value={tipo} onValueChange={setTipo}>
+              <SelectTrigger id="edit-tipo" data-testid="select-edit-tipo">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ata">Ata</SelectItem>
+                <SelectItem value="regulamento">Regulamento</SelectItem>
+                <SelectItem value="relatorio">Relatório</SelectItem>
+                <SelectItem value="outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="edit-categoria">Categoria</Label>
+            <Input
+              id="edit-categoria"
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              data-testid="input-edit-categoria"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="edit-visibilidade">Visibilidade *</Label>
+            <Select value={visivelPara} onValueChange={setVisivelPara}>
+              <SelectTrigger id="edit-visibilidade" data-testid="select-edit-visibilidade">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="direcao">Direção</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {document.categoria && (
-          <p className="text-sm text-muted-foreground mb-4">
-            {document.categoria}
-          </p>
-        )}
-
-        <div className="flex items-center justify-between pt-4 border-t text-sm text-muted-foreground">
-          <span>
-            {new Date(document.createdAt!).toLocaleDateString('pt-PT')}
-          </span>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleDownload}
-            data-testid={`button-download-${document.id}`}
-          >
-            <Download className="h-4 w-4 mr-1" />
-            Download
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-cancel-edit">
+            Cancelar
           </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <Button
+            onClick={handleSubmit}
+            disabled={updateMutation.isPending}
+            data-testid="button-save-edit"
+          >
+            {updateMutation.isPending ? "A guardar..." : "Guardar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -190,6 +491,7 @@ function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
   const [titulo, setTitulo] = useState("");
   const [tipo, setTipo] = useState<string>("ata");
   const [categoria, setCategoria] = useState("");
+  const [visivelPara, setVisivelPara] = useState<string>("todos");
   const [isDragging, setIsDragging] = useState(false);
 
   const uploadMutation = useMutation({
@@ -200,6 +502,7 @@ function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
       formData.append('file', selectedFile);
       formData.append('titulo', titulo);
       formData.append('tipo', tipo);
+      formData.append('visivelPara', visivelPara);
       if (categoria) formData.append('categoria', categoria);
 
       const response = await fetch('/api/documents/upload', {
@@ -237,6 +540,7 @@ function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
     setTitulo("");
     setTipo("ata");
     setCategoria("");
+    setVisivelPara("todos");
     onOpenChange(false);
   };
 
@@ -285,7 +589,6 @@ function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* File Drop Zone */}
           <div
             className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
               isDragging ? 'border-primary bg-primary/5' : 'border-border'
@@ -343,7 +646,6 @@ function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
             )}
           </div>
 
-          {/* Form Fields */}
           <div className="space-y-3">
             <div>
               <Label htmlFor="titulo">Título *</Label>
@@ -380,6 +682,20 @@ function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                 placeholder="Ex: Assembleia Geral 2024"
                 data-testid="input-categoria"
               />
+            </div>
+
+            <div>
+              <Label htmlFor="visibilidade">Visibilidade *</Label>
+              <Select value={visivelPara} onValueChange={setVisivelPara}>
+                <SelectTrigger id="visibilidade" data-testid="select-visibilidade">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="direcao">Direção</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>

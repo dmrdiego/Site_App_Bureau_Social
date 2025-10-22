@@ -645,6 +645,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update document metadata
+  app.put("/api/documents/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { titulo, tipo, categoria, visivelPara, assemblyId } = req.body;
+      
+      const document = await storage.getDocumentById(id);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      const updated = await storage.updateDocument(id, {
+        titulo,
+        tipo,
+        categoria: categoria || null,
+        visivelPara,
+        assemblyId: assemblyId ? parseInt(assemblyId) : null,
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Document update error:", error);
+      res.status(500).json({ message: error.message || "Failed to update document" });
+    }
+  });
+
+  // Delete document
+  app.delete("/api/documents/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const document = await storage.getDocumentById(id);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Delete file from object storage if it's not a local file
+      if (!document.filePath.startsWith('/documents/')) {
+        const objStorage = new Client();
+        const deleteResult = await objStorage.delete(document.filePath);
+        
+        if (!deleteResult.ok) {
+          console.warn(`Failed to delete file from storage: ${deleteResult.error}`);
+        }
+
+        // Delete object entity record
+        await storage.deleteObjectEntity(document.filePath);
+      }
+
+      // Delete document record
+      await storage.deleteDocument(id);
+
+      res.status(204).send();
+    } catch (error: any) {
+      console.error("Document delete error:", error);
+      res.status(500).json({ message: error.message || "Failed to delete document" });
+    }
+  });
+
   // ============================================================================
   // NOTIFICATIONS
   // ============================================================================
@@ -1018,6 +1077,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user:", error);
       res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Email broadcast to members
+  app.post("/api/admin/email/broadcast", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { subject, html, segmento = "todos", testePara } = req.body;
+
+      if (!subject || !html) {
+        return res.status(400).json({ message: "Subject e HTML são obrigatórios" });
+      }
+
+      // Send test email only
+      if (testePara) {
+        await sendEmail({ to: testePara, subject, html });
+        return res.json({ preview: true, message: "Email de teste enviado" });
+      }
+
+      // Get all users
+      const allUsers = await storage.getAllUsers();
+
+      // Filter based on segment
+      const destinatarios = allUsers.filter(u => {
+        if (segmento === "direcao") return u.isDirecao;
+        if (segmento === "admin") return u.isAdmin;
+        if (segmento === "ativos") return u.ativo;
+        if (segmento === "contribuinte") return u.categoria === "contribuinte";
+        if (segmento === "fundador") return u.categoria === "fundador";
+        return true; // todos
+      });
+
+      // Send emails asynchronously in batches
+      const batchSize = 50;
+      let sentCount = 0;
+      let errorCount = 0;
+
+      setImmediate(async () => {
+        try {
+          for (let i = 0; i < destinatarios.length; i += batchSize) {
+            const batch = destinatarios.slice(i, i + batchSize);
+            
+            await Promise.all(
+              batch.map(async (user) => {
+                try {
+                  await sendEmail({ 
+                    to: user.email, 
+                    subject, 
+                    html 
+                  });
+                  sentCount++;
+                } catch (error) {
+                  console.error(`Erro ao enviar email para ${user.email}:`, error);
+                  errorCount++;
+                }
+              })
+            );
+          }
+          console.log(`Broadcast concluído: ${sentCount} enviados, ${errorCount} erros`);
+        } catch (error) {
+          console.error('Erro geral ao enviar broadcast:', error);
+        }
+      });
+
+      res.json({ 
+        total: destinatarios.length,
+        message: `Enviando emails para ${destinatarios.length} destinatários...`
+      });
+    } catch (error: any) {
+      console.error("Email broadcast error:", error);
+      res.status(500).json({ message: error.message || "Failed to send broadcast" });
     }
   });
 

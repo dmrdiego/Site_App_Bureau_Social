@@ -20,6 +20,7 @@ import AdminCMS from "@/pages/AdminCMS";
 import NovaAssembleia from "@/pages/NovaAssembleia";
 import AdminAssociados from "@/pages/AdminAssociados";
 import Configuracoes from "@/pages/Configuracoes";
+import Comunicacoes from "@/pages/Comunicacoes";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -44,6 +45,7 @@ function Router() {
           <Route path="/perfil" component={Perfil} />
           <Route path="/admin/cms" component={AdminCMS} />
           <Route path="/admin/associados" component={AdminAssociados} />
+          <Route path="/admin/comunicacoes" component={Comunicacoes} />
           <Route path="/admin/config" component={Configuracoes} />
           <Route component={NotFound} />
         </>

@@ -262,6 +262,19 @@ export class DbStorage implements IStorage {
       .orderBy(desc(documents.createdAt));
   }
 
+  async updateDocument(id: number, data: Partial<Document>): Promise<Document | undefined> {
+    const updated = await db
+      .update(documents)
+      .set(data)
+      .where(eq(documents.id, id))
+      .returning();
+    return updated[0];
+  }
+
+  async deleteDocument(id: number): Promise<void> {
+    await db.delete(documents).where(eq(documents.id, id));
+  }
+
   // Presences
   async createPresence(presence: InsertPresence): Promise<Presence> {
     const inserted = await db.insert(presences).values(presence).returning();
