@@ -8,6 +8,12 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import type { User } from "@shared/schema";
 import { generateAssemblyMinutesPDF } from "./pdfGenerator";
 import {
+  sendEmail,
+  createNovaAssembleiaEmail,
+  createAtaDisponivelEmail,
+  createProcuracaoRecebidaEmail,
+} from "./emailService";
+import {
   insertAssemblySchema,
   insertVotingItemSchema,
   insertVoteSchema,
@@ -126,6 +132,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdBy: getUserId(req),
       });
 
+      // Enviar emails para todos os associados
+      try {
+        const users = await storage.getAllUsers();
+        for (const user of users) {
+          if (user.email) {
+            const emailHtml = createNovaAssembleiaEmail(
+              `${user.firstName} ${user.lastName}`,
+              {
+                titulo: assembly.titulo,
+                dataHora: assembly.dataHora,
+                localizacao: assembly.localizacao || '',
+                descricao: assembly.descricao || undefined,
+              }
+            );
+            await sendEmail({
+              to: user.email,
+              subject: `Nova Assembleia: ${assembly.titulo}`,
+              html: emailHtml,
+            });
+          }
+        }
+        console.log(`Emails enviados para ${users.length} associados sobre nova assembleia`);
+      } catch (emailError) {
+        console.error('Erro ao enviar emails de nova assembleia:', emailError);
+      }
+
       res.status(201).json(assembly);
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Failed to create assembly" });
@@ -206,6 +238,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const proxy = await storage.createProxy(proxyData);
+
+      // Enviar email ao receiver
+      try {
+        const giver = await storage.getUser(userId);
+        const receiver = await storage.getUser(receiverId);
+        if (receiver?.email && giver) {
+          const emailHtml = createProcuracaoRecebidaEmail(
+            `${receiver.firstName} ${receiver.lastName}`,
+            `${giver.firstName} ${giver.lastName}`,
+            {
+              titulo: assembly.titulo,
+              dataHora: assembly.dataHora,
+            }
+          );
+          await sendEmail({
+            to: receiver.email,
+            subject: `Nova Procuração Recebida - ${assembly.titulo}`,
+            html: emailHtml,
+          });
+        }
+      } catch (emailError) {
+        console.error('Erro ao enviar email de procuração:', emailError);
+      }
+
       res.status(201).json(proxy);
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Failed to manage proxy" });
@@ -854,6 +910,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ataGerada: true,
       });
 
+      // Enviar emails para todos os associados
+      try {
+        const users = await storage.getAllUsers();
+        for (const user of users) {
+          if (user.email) {
+            const emailHtml = createAtaDisponivelEmail(
+              `${user.firstName} ${user.lastName}`,
+              {
+                titulo: assembly.titulo,
+                dataHora: assembly.dataHora,
+              }
+            );
+            await sendEmail({
+              to: user.email,
+              subject: `Ata Disponível - ${assembly.titulo}`,
+              html: emailHtml,
+            });
+          }
+        }
+        console.log(`Emails enviados para ${users.length} associados sobre ata disponível`);
+      } catch (emailError) {
+        console.error('Erro ao enviar emails de ata disponível:', emailError);
+      }
+
       res.json({ 
         success: true, 
         document,
@@ -862,6 +942,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Minutes generation error:", error);
       res.status(500).json({ message: "Failed to generate minutes" });
+    }
+  });
+
+  // ============================================================================
+  // ADMIN - USER MANAGEMENT
+  // ============================================================================
+
+  app.get("/api/admin/users", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.patch("/api/admin/users/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = req.params.id;
+      const updates = req.body;
+
+      // Validate that we're not allowing dangerous updates
+      const allowedFields = ['categoria', 'numeroSocio', 'telefone', 'isAdmin', 'isDirecao'];
+      const filteredUpdates: any = {};
+      
+      for (const field of allowedFields) {
+        if (field in updates) {
+          filteredUpdates[field] = updates[field];
+        }
+      }
+
+      const updatedUser = await storage.updateUser(userId, filteredUpdates);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
     }
   });
 
