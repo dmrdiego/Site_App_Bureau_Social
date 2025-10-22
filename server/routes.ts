@@ -689,9 +689,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!deleteResult.ok) {
           console.warn(`Failed to delete file from storage: ${deleteResult.error}`);
         }
-
-        // Delete object entity record
-        await storage.deleteObjectEntity(document.filePath);
       }
 
       // Delete document record
@@ -858,7 +855,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         assemblyId,
         userId: getUserId(req),
         presente: true,
-        confirmadoEm: new Date(),
       });
 
       res.status(201).json(presence);
@@ -1098,8 +1094,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all users
       const allUsers = await storage.getAllUsers();
 
-      // Filter based on segment
+      // Filter based on segment (and ensure email exists)
       const destinatarios = allUsers.filter(u => {
+        if (!u.email) return false;
         if (segmento === "direcao") return u.isDirecao;
         if (segmento === "admin") return u.isAdmin;
         if (segmento === "ativos") return u.ativo;
@@ -1122,7 +1119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               batch.map(async (user) => {
                 try {
                   await sendEmail({ 
-                    to: user.email, 
+                    to: user.email!, 
                     subject, 
                     html 
                   });

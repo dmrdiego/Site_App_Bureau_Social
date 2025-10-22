@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { CmsContent } from "@shared/schema";
 
 const sections = [
   { key: 'hero', label: 'Hero / Banner Principal' },
@@ -46,7 +47,7 @@ export default function AdminCMS() {
     }
   }, [isAuthenticated, authLoading, isAdmin, toast]);
 
-  const { data: cmsContent, isLoading } = useQuery({
+  const { data: cmsContent, isLoading } = useQuery<CmsContent>({
     queryKey: ['/api/cms', selectedSection],
     enabled: isAuthenticated && isAdmin,
   });
@@ -246,7 +247,7 @@ function ContentEditor({ sectionKey, content, onChange }: {
               type="email"
               value={content.email || ''}
               onChange={(e) => onChange('email', e.target.value)}
-              placeholder="info@bureauso cial.pt"
+              placeholder="info@bureausocial.pt"
               data-testid="input-contact-email"
             />
           </div>
@@ -270,6 +271,117 @@ function ContentEditor({ sectionKey, content, onChange }: {
               rows={3}
               data-testid="input-contact-address"
             />
+          </div>
+        </div>
+      );
+
+    case 'services':
+      return (
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="heading">Título da Secção</Label>
+            <Input
+              id="heading"
+              value={content.heading || ''}
+              onChange={(e) => onChange('heading', e.target.value)}
+              placeholder="Nossos Serviços"
+              data-testid="input-services-heading"
+            />
+          </div>
+          <div>
+            <Label htmlFor="items">Serviços (JSON Array)</Label>
+            <Textarea
+              id="items"
+              value={JSON.stringify(content.items || [], null, 2)}
+              onChange={(e) => {
+                try {
+                  const parsed = JSON.parse(e.target.value);
+                  onChange('items', parsed);
+                } catch {
+                  // Invalid JSON
+                }
+              }}
+              rows={12}
+              className="font-mono text-sm"
+              data-testid="input-services-items"
+            />
+            <p className="text-sm text-muted-foreground mt-2">
+              Formato: Array com campos title, description, icon
+            </p>
+          </div>
+        </div>
+      );
+
+    case 'projects':
+      return (
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="heading">Título da Secção</Label>
+            <Input
+              id="heading"
+              value={content.heading || ''}
+              onChange={(e) => onChange('heading', e.target.value)}
+              placeholder="Nossos Projetos"
+              data-testid="input-projects-heading"
+            />
+          </div>
+          <div>
+            <Label htmlFor="items">Projetos (JSON Array)</Label>
+            <Textarea
+              id="items"
+              value={JSON.stringify(content.items || [], null, 2)}
+              onChange={(e) => {
+                try {
+                  const parsed = JSON.parse(e.target.value);
+                  onChange('items', parsed);
+                } catch {
+                  // Invalid JSON
+                }
+              }}
+              rows={12}
+              className="font-mono text-sm"
+              data-testid="input-projects-items"
+            />
+            <p className="text-sm text-muted-foreground mt-2">
+              Formato: Array com campos name, description, link
+            </p>
+          </div>
+        </div>
+      );
+
+    case 'impact':
+      return (
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="heading">Título da Secção</Label>
+            <Input
+              id="heading"
+              value={content.heading || ''}
+              onChange={(e) => onChange('heading', e.target.value)}
+              placeholder="Nosso Impacto"
+              data-testid="input-impact-heading"
+            />
+          </div>
+          <div>
+            <Label htmlFor="stats">Estatísticas (JSON Array)</Label>
+            <Textarea
+              id="stats"
+              value={JSON.stringify(content.stats || [], null, 2)}
+              onChange={(e) => {
+                try {
+                  const parsed = JSON.parse(e.target.value);
+                  onChange('stats', parsed);
+                } catch {
+                  // Invalid JSON
+                }
+              }}
+              rows={12}
+              className="font-mono text-sm"
+              data-testid="input-impact-stats"
+            />
+            <p className="text-sm text-muted-foreground mt-2">
+              Formato: Array com campos label, value, suffix
+            </p>
           </div>
         </div>
       );

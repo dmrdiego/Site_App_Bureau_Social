@@ -57,7 +57,11 @@ export const users = pgTable("users", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
-export const insertUserSchema = createInsertSchema(users);
+export const insertUserSchema = createInsertSchema(users).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
 export const selectUserSchema = createSelectSchema(users);
 
 // ============================================================================
@@ -83,7 +87,10 @@ export const assemblies = pgTable("assemblies", {
 export type Assembly = typeof assemblies.$inferSelect;
 export type InsertAssembly = typeof assemblies.$inferInsert;
 
-export const insertAssemblySchema = createInsertSchema(assemblies).omit({ id: true });
+export const insertAssemblySchema = createInsertSchema(assemblies).omit({ 
+  id: true, 
+  createdAt: true 
+});
 export const selectAssemblySchema = createSelectSchema(assemblies);
 
 // ============================================================================
@@ -109,7 +116,10 @@ export const votingItems = pgTable("voting_items", {
 export type VotingItem = typeof votingItems.$inferSelect;
 export type InsertVotingItem = typeof votingItems.$inferInsert;
 
-export const insertVotingItemSchema = createInsertSchema(votingItems).omit({ id: true });
+export const insertVotingItemSchema = createInsertSchema(votingItems).omit({ 
+  id: true, 
+  createdAt: true 
+});
 export const selectVotingItemSchema = createSelectSchema(votingItems);
 
 // ============================================================================
@@ -129,7 +139,10 @@ export const votes = pgTable("votes", {
 export type Vote = typeof votes.$inferSelect;
 export type InsertVote = typeof votes.$inferInsert;
 
-export const insertVoteSchema = createInsertSchema(votes).omit({ id: true });
+export const insertVoteSchema = createInsertSchema(votes).omit({ 
+  id: true, 
+  createdAt: true 
+});
 export const selectVoteSchema = createSelectSchema(votes);
 
 // ============================================================================
@@ -149,7 +162,10 @@ export const proxies = pgTable("proxies", {
 export type Proxy = typeof proxies.$inferSelect;
 export type InsertProxy = typeof proxies.$inferInsert;
 
-export const insertProxySchema = createInsertSchema(proxies).omit({ id: true });
+export const insertProxySchema = createInsertSchema(proxies).omit({ 
+  id: true, 
+  createdAt: true 
+});
 export const selectProxySchema = createSelectSchema(proxies);
 
 // ============================================================================
@@ -172,7 +188,11 @@ export const documents = pgTable("documents", {
 export type Document = typeof documents.$inferSelect;
 export type InsertDocument = typeof documents.$inferInsert;
 
-export const insertDocumentSchema = createInsertSchema(documents).omit({ id: true });
+export const insertDocumentSchema = createInsertSchema(documents).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
 export const selectDocumentSchema = createSelectSchema(documents);
 
 // ============================================================================
@@ -192,7 +212,9 @@ export const presences = pgTable("presences", {
 export type Presence = typeof presences.$inferSelect;
 export type InsertPresence = typeof presences.$inferInsert;
 
-export const insertPresenceSchema = createInsertSchema(presences).omit({ id: true });
+export const insertPresenceSchema = createInsertSchema(presences).omit({ 
+  id: true 
+});
 export const selectPresenceSchema = createSelectSchema(presences);
 
 // ============================================================================
@@ -213,7 +235,10 @@ export const notifications = pgTable("notifications", {
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
 
-export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true });
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ 
+  id: true, 
+  createdAt: true 
+});
 export const selectNotificationSchema = createSelectSchema(notifications);
 
 // ============================================================================
@@ -231,7 +256,11 @@ export const cmsContent = pgTable("cms_content", {
 export type CmsContent = typeof cmsContent.$inferSelect;
 export type InsertCmsContent = typeof cmsContent.$inferInsert;
 
-export const insertCmsContentSchema = createInsertSchema(cmsContent).omit({ id: true });
+export const insertCmsContentSchema = createInsertSchema(cmsContent).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
 export const selectCmsContentSchema = createSelectSchema(cmsContent);
 
 // ============================================================================
@@ -250,7 +279,10 @@ export const objectEntities = pgTable("object_entities", {
 export type ObjectEntity = typeof objectEntities.$inferSelect;
 export type InsertObjectEntity = typeof objectEntities.$inferInsert;
 
-export const insertObjectEntitySchema = createInsertSchema(objectEntities).omit({ id: true });
+export const insertObjectEntitySchema = createInsertSchema(objectEntities).omit({ 
+  id: true, 
+  createdAt: true 
+});
 export const selectObjectEntitySchema = createSelectSchema(objectEntities);
 
 // ============================================================================
