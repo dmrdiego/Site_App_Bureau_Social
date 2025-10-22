@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
@@ -80,7 +81,10 @@ function AppContent() {
               <div className="flex flex-col flex-1 overflow-hidden">
                 <header className="flex items-center justify-between p-4 border-b bg-background">
                   <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <ThemeToggle />
+                  <div className="flex items-center gap-2">
+                    <LanguageToggle />
+                    <ThemeToggle />
+                  </div>
                 </header>
                 <main className="flex-1 overflow-auto p-6 md:p-8">
                   <Router />

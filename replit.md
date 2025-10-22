@@ -6,10 +6,11 @@ This project is a comprehensive web application for Instituto Português de Neg�
 
 ## User Preferences
 
-- Language: Portuguese (Portugal)
+- Language: Portuguese (Portugal) + English (bilingual system with react-i18next)
 - Design: Professional institutional style with Material Design for portal
 - Stack: Fullstack JavaScript with TypeScript, React, Express, PostgreSQL (Neon), Drizzle ORM
 - Authentication: Replit Auth (OIDC)
+- Internationalization: react-i18next with PT/EN translations and language toggle
 
 ## System Architecture
 
@@ -23,7 +24,8 @@ The application employs a full-stack JavaScript/TypeScript architecture with a c
 - **Forms**: React Hook Form + Zod validation
 - **Styling**: Tailwind CSS with a custom design system, including full dark mode support.
 - **Theme**: Light/Dark mode with ThemeProvider.
-- **Design System**: Bureau Social brand colors (institutional blue #2c5aa0, terracotta accent) with consistent typography (Inter font) and component styling.
+- **Internationalization**: react-i18next v13+ with language persistence and toggle component.
+- **Design System**: Bureau Social brand colors (azul petróleo #044050, cinza azulado #788b92, terracotta accent) with consistent typography (Inter font) and component styling.
 
 ### Backend (server/)
 - **Framework**: Express.js
@@ -53,14 +55,26 @@ The database includes 11 core tables: `users`, `sessions`, `assemblies`, `voting
 ## External Dependencies
 
 - **Replit Auth**: User authentication (OIDC).
-- **PostgreSQL (Neon)**: Primary database.
+- **PostgreSQL (Neon)**: Primary database with 88+ documents (27 added in October 2025 upgrade).
 - **Replit Object Storage**: Stores uploaded documents and PDF minutes.
 - **PDFKit**: Generates PDF documents.
 - **Resend**: Email service provider for transactional notifications.
 - **TanStack Query**: Manages frontend server state.
 - **Shadcn/ui**: UI components library.
+- **react-i18next**: Internationalization (PT/EN).
 - **openid-client**: OIDC client library.
 - **express-session**: Session management for Express.
 - **Drizzle ORM**: ORM for PostgreSQL.
 - **Zod**: Schema validation.
 - **multer**: Handles `multipart/form-data` for file uploads.
+
+## Recent Changes
+
+### October 2025 - Upgrade Package Integration
+- ✅ **Sistema Bilíngue**: Integrated react-i18next with complete PT/EN translations, language toggle in header
+- ✅ **Nova Paleta de Cores**: Updated design system to azul petróleo (#044050) and cinza azulado (#788b92)
+- ✅ **27 Novos Documentos**: Added comprehensive document library including:
+  - 7 Regulamentos (Interno, Eleitoral, Quotas, Código de Conduta, Políticas)
+  - 11 Relatórios (Planos Estratégicos, Atividades, Orçamentos, Captação de Recursos)
+  - 3 Atas
+  - 6 Documentos de Parceria (Apresentações, Fichas, Propostas, Termos)
