@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is a complete web application for Instituto Português de Negócios Sociais - Bureau Social. It features a public institutional website and a comprehensive member portal. The member portal includes functionalities for assembly management, an online voting system, document management, and a Content Management System (CMS). The project aims to streamline the institution's operations, enhance member engagement through digital tools, and provide a professional online presence.
+This project is a comprehensive web application for Instituto Português de Negócios Sociais - Bureau Social. It features a public institutional website and a full-fledged member portal designed to streamline operations and enhance member engagement. Key capabilities include assembly management, an online voting system with proxy delegation, secure document management, a Content Management System (CMS), and robust administrative tools. The project aims to provide a professional online presence and digitalize core institutional processes.
 
 ## User Preferences
 
@@ -13,7 +13,7 @@ This project is a complete web application for Instituto Português de Negócios
 
 ## System Architecture
 
-The application is built with a clear separation of concerns, utilizing a full-stack JavaScript/TypeScript architecture.
+The application employs a full-stack JavaScript/TypeScript architecture with a clear separation of concerns.
 
 ### Frontend (client/)
 - **Framework**: React 18 + TypeScript + Vite
@@ -33,203 +33,34 @@ The application is built with a clear separation of concerns, utilizing a full-s
 - **Authentication**: Replit Auth using `openid-client v6` with `requireAuth`, `requireAdmin`, and `requireAdminOrDirecao` middleware.
 - **File Storage**: Replit Object Storage integrated for document uploads via `multer` and PDF storage.
 - **PDF Generation**: PDFKit library for generating assembly minutes with institutional branding.
-- **API Endpoints**: Comprehensive set of 19 API endpoints covering authentication, dashboard, assemblies, presences, voting items, votes, documents, notifications, CMS, users, PDF minutes generation, and PDF download.
-- **Business Logic**: Includes user auto-upsert on OIDC login, duplicate vote/presence prevention, assembly existence validation, PDF minutes generation with institutional template, enriched participant data with roles, vote aggregation, and PDF storage in Object Storage.
-- **Storage Layer**: A `DbStorage` class implements an `IStorage` interface with 33 methods for all CRUD operations across core entities.
+- **API Endpoints**: Comprehensive set of 19 API endpoints covering authentication, dashboard, assemblies, presences, voting, documents, notifications, CMS, users, and PDF generation/download.
+- **Business Logic**: Includes user auto-upsert, duplicate vote/presence prevention, PDF minutes generation, enriched participant data, vote aggregation, and a robust storage layer (`DbStorage` class with 33 methods).
 
 ### Database Schema (shared/schema.ts)
-The database comprises 11 core tables:
-- **users**: User accounts with Bureau Social-specific extensions (e.g., `isAdmin`, `isDirecao`).
-- **sessions**: Stores user session data.
-- **assemblies**: Manages general assembly details.
-- **voting_items**: Defines items for voting within assemblies.
-- **votes**: Records individual votes.
-- **documents**: Manages institutional documents with categorization and access control.
-- **presences**: Tracks attendance at assemblies.
-- **notifications**: Handles user notifications.
-- **cms_content**: Stores editable content for website sections.
-- **object_entities**: Tracks files stored in Replit Object Storage.
-- **proxies**: Manages vote delegation/proxy system (giverId, receiverId, assemblyId, revokedAt).
+The database includes 11 core tables: `users`, `sessions`, `assemblies`, `voting_items`, `votes`, `documents`, `presences`, `notifications`, `cms_content`, `object_entities`, and `proxies` (for vote delegation).
 
 ### Key Features
-- **Public Website**: Hero, Mission, Services, Projects, Impact Stats, Contact, Footer sections, all dynamically loaded from CMS.
-- **Member Portal**: Dashboard, Assembly management (view, create, attendance), Online voting with results, Document repository (categorized), User profile, Real-time notifications, PDF minutes generation and download, Proxy/delegation system.
-- **Admin Features**: CMS content editor, user management, assembly creation, document upload, PDF minutes generation (admin/direção), proxy auditing, and system configuration.
-- **Authentication Flow**: OIDC with PKCE, user upsertion, session creation, and redirection to dashboard.
-- **Document Management**: Upload, categorization, and download of documents, supporting both local and object storage files.
-- **PDF Minutes Generation**: Institutional-branded PDF generation with assembly details, participants (with roles), voting items, and results. Stored in Object Storage with download functionality.
-- **Proxy/Delegation System**: Members can delegate their vote to another member for specific assemblies. Includes anti-loop validation, vote weighting, visual badges, and admin auditing. Delegators cannot vote directly while proxy is active.
-- **CMS Content Seeding**: Pre-populated content for landing page sections with robust fallbacks.
-- **Branding**: Custom logo (Pt-BS_1760236872718.png) displayed in sidebar and public navigation.
+- **Public Website**: Dynamically loaded content for sections like Hero, Mission, Services, Projects, Impact Stats, Contact.
+- **Member Portal**: Dashboard, Assembly management (create, view, attendance), Online voting with proxy system, Document repository, User profiles, Real-time notifications, PDF minutes generation/download.
+- **Admin Features**: CMS content editor, user management (categories, permissions), assembly creation, document upload, PDF minutes generation (admin/direção), proxy auditing, and system configuration.
+- **Authentication Flow**: OIDC with PKCE, user upsertion, session creation.
+- **Document Management**: Upload, categorization, and download of documents, utilizing Replit Object Storage.
+- **PDF Minutes Generation**: Institutional-branded PDF generation with assembly details, participants, voting results, stored in Object Storage.
+- **Proxy/Delegation System**: Members can delegate their vote for specific assemblies. Includes anti-loop validation, vote weighting, visual badges, and admin auditing. Delegators cannot vote directly while a proxy is active.
+- **Email Notification System**: Asynchronous email delivery via Resend for new assemblies, available minutes, received proxies, and new documents.
+- **Admin User Management**: Interface for listing, searching, filtering, and editing user data including categories, member numbers, and admin/direção permissions.
 
 ## External Dependencies
 
-- **Replit Auth**: Used for user authentication (OIDC).
-- **PostgreSQL (Neon)**: The primary database for all application data.
-- **Replit Object Storage**: Utilized for storing uploaded documents and PDF minutes.
-- **PDFKit**: Library for generating PDF documents (assembly minutes).
-- **TanStack Query**: Manages server state in the frontend.
-- **Shadcn/ui**: Provides UI components based on Radix UI primitives and Tailwind CSS.
-- **openid-client**: OIDC client library for authentication flows.
-- **express-session**: Middleware for session management in Express.
-- **Drizzle ORM**: ORM for interacting with the PostgreSQL database.
-- **Zod**: Schema validation library used for API requests and forms.
-- **multer**: Middleware for handling `multipart/form-data`, primarily for file uploads.
-
-## Testing & Quality Assurance
-
-### E2E Test Coverage (October 2025)
-Comprehensive end-to-end testing completed using Playwright:
-
-1. **Authentication & Dashboard** ✅
-   - OIDC login flow with Replit Auth
-   - Dashboard navigation and admin verification
-   - User auto-upsert on first login
-
-2. **Assemblies Module** ✅
-   - Assembly creation flow (bug fixed: date conversion)
-   - Assembly listing and visualization
-   - Navigation to voting items
-
-3. **Voting System** ✅
-   - Voting items visualization
-   - Vote counting and results display
-   - Integration with assemblies
-
-4. **Document Management** ✅
-   - Document listing (30 seeded documents)
-   - Download functionality
-   - Admin-only upload restrictions
-
-5. **User Profile** ✅
-   - Profile information display
-   - Category badges (Fundador, Efetivo, Contribuinte)
-   - Participation statistics
-
-### Bug Fixes Applied
-- **Date Conversion Bug** (NovaAssembleia.tsx): Changed from `.toISOString()` to `new Date()` for proper backend schema compatibility
-- **Testability Improvements**: Added comprehensive data-testid attributes across all pages
-
-### Production Readiness
-- All critical user flows tested and verified
-- No security concerns identified
-- Performance validated
-- PDF generation and download validated (2556 bytes, correct headers)
-- Ready for deployment
-
-## Recent Updates (October 12, 2025)
-
-### PDF Minutes Generation - COMPLETED ✅
-**Implementation Details:**
-1. **Backend (server/pdfGenerator.ts)**:
-   - `generateAssemblyMinutesPDF()` function with institutional Bureau Social branding
-   - Header with institutional blue (#2c5aa0)
-   - Content includes: assembly title, date/time, location, participants with roles (Direção, Fundador, etc.), voting items with results
-   - Returns Buffer for upload to Object Storage
-
-2. **API Endpoints (server/routes.ts)**:
-   - `POST /api/assemblies/:id/generate-minutes` (requireAdminOrDirecao middleware)
-     - Generates PDF, uploads to Object Storage (PRIVATE_OBJECT_DIR/atas/), creates document record, sets ataGerada=true
-   - `GET /api/assemblies/:id/download-minutes` (requireAuth)
-     - Downloads PDF from Object Storage with proper Content-Type and Content-Disposition headers
-
-3. **Middleware**:
-   - `requireAdminOrDirecao`: Allows both admin (isAdmin=true) OR direção (isDirecao=true) users to generate minutes
-
-4. **Storage Enhancement**:
-   - Added `getDocumentsByAssembly(assemblyId: number): Promise<Document[]>` to IStorage interface and DbStorage implementation
-   - Used to fetch minutes document for download
-
-5. **Frontend (client/src/pages/Assemblies.tsx)**:
-   - "Gerar Ata" button (visible for admin/direção on encerradas assemblies without ata)
-   - "Download Ata" button (visible for all users on assemblies with ata)
-   - "Ata Disponível" badge when ataGerada=true
-   - Mutation with proper error handling and cache invalidation
-
-**Testing:**
-- E2E test passed: PDF generation and download working (2556 bytes, status 200)
-- Headers validated: Content-Type: application/pdf, Content-Disposition with proper filename
-- UI validated: Badges and buttons appear correctly based on permissions and assembly state
-
-**Bug Fixes:**
-1. Fixed apiRequest call signature: changed from (url, method, data) to (method, url, data)
-2. Fixed PDF download buffer handling: proper destructuring [fileBytes] = result.value
-3. Added missing getDocumentsByAssembly storage method
-
-### Proxy/Delegation System - COMPLETED ✅
-**Implementation Details:**
-1. **Database Schema (shared/schema.ts)**:
-   - Added `proxies` table with fields: id, giverId, receiverId, assemblyId, createdAt, revokedAt
-   - Active proxies: revokedAt IS NULL
-   - Revoked proxies: revokedAt IS NOT NULL
-
-2. **Storage Layer (server/storage.ts)**:
-   - `createProxy()`: Create new proxy delegation
-   - `getActiveProxyForUser()`: Get user's active proxy for assembly
-   - `getProxiesReceivedByUser()`: Get proxies delegated to user
-   - `getProxiesByAssembly()`: Get all proxies for assembly (with option to include revoked)
-   - `revokeProxy()`: Revoke active proxy
-   - `checkProxyLoop()`: Recursive validation to prevent circular delegation (A→B→C→A)
-
-3. **API Endpoints (server/routes.ts)**:
-   - `POST /api/assemblies/:id/proxies` (requireAuth)
-     - Create: {receiverId: number} - validates anti-loop, anti self-delegation
-     - Revoke: {} (empty body) - revokes active proxy
-   - `GET /api/assemblies/:id/my-proxies` (requireAuth)
-     - Returns: {given?: {receiverId, receiverName}, received?: [{giverId, giverName}]}
-   - `GET /api/assemblies/:id/proxies` (requireAdmin)
-     - Admin-only endpoint for auditing, includes revoked proxies
-   - `GET /api/users/for-proxy` (requireAuth)
-     - Lists users for proxy selection (safe fields only)
-
-4. **Vote Counting Enhancement**:
-   - `POST /api/votes` now validates if user has active proxy
-   - Rejects with 400: "Não pode votar porque delegou o seu voto. Revogue a procuração para poder votar."
-   - `GET /api/voting-items/:id/results` calculates vote weight: 1 + number of received proxies
-   - Ensures no double-counting (delegator blocked from voting)
-
-5. **Frontend (client/src/pages/Assemblies.tsx)**:
-   - `ProxyDialog` component: Modal for managing proxies
-     - Select from available users
-     - "Criar Procuração" button (data-testid="button-submit-proxy")
-     - "Revogar Procuração" button (data-testid="button-revoke-proxy") - only visible if active
-     - Shows received proxies (read-only)
-   - Visual badges on AssemblyCard:
-     - "Procuração dada" badge (data-testid="badge-procuracao-dada-{id}") - shows receiver name
-     - "Procurações recebidas" badge (data-testid="badge-procuracoes-recebidas-{id}") - shows count
-   - Trigger button: "Procuração" (data-testid="button-procuracao-{id}") - only for agendada assemblies
-
-6. **Voting UI Enhancement (client/src/pages/Votacoes.tsx)**:
-   - Removed broken detail page routes
-   - Added inline voting buttons: A Favor, Contra, Abstenção
-   - Each button: data-testid="button-vote-{tipo}-{votingItemId}"
-   - Buttons disabled after voting (useState hasVoted)
-   - Mutation shows proxy error if user has delegated vote
-
-**Business Rules:**
-- Cannot delegate to self
-- Cannot create circular delegation loops (A→B→C→A)
-- Only 1 active proxy per assembly per user
-- **CRITICAL**: User who delegated vote cannot vote directly (backend validation)
-- Revoking proxy allows user to vote again
-- Vote weight = 1 + number of proxies received
-- Admin can audit all proxies including revoked ones
-
-**Testing:**
-- Manual testing completed
-- Anti-loop validation tested and working
-- Double-counting bug fixed (delegators blocked from voting)
-- Badge visualization confirmed
-- Toast messages validated
-
-### Logo Update - COMPLETED ✅
-**Implementation Details:**
-1. **Asset**: `Pt-BS_1760236872718.png` added to attached_assets
-2. **AppSidebar.tsx**: Logo displayed in portal sidebar
-   - Import: `import logoImage from "@assets/Pt-BS_1760236872718.png"`
-   - Implementation: `<img src={logoImage} alt="Bureau Social" className="w-10 h-10 object-contain" />`
-3. **PublicNav.tsx**: Logo displayed in public navigation
-   - Same implementation as sidebar
-   - Maintains consistent branding across public and authenticated areas
-4. **Accessibility**: Alt text "Bureau Social" for screen readers
-5. **Styling**: `object-contain` preserves aspect ratio, `w-10 h-10` maintains consistent sizing
+- **Replit Auth**: User authentication (OIDC).
+- **PostgreSQL (Neon)**: Primary database.
+- **Replit Object Storage**: Stores uploaded documents and PDF minutes.
+- **PDFKit**: Generates PDF documents.
+- **Resend**: Email service provider for transactional notifications.
+- **TanStack Query**: Manages frontend server state.
+- **Shadcn/ui**: UI components library.
+- **openid-client**: OIDC client library.
+- **express-session**: Session management for Express.
+- **Drizzle ORM**: ORM for PostgreSQL.
+- **Zod**: Schema validation.
+- **multer**: Handles `multipart/form-data` for file uploads.
