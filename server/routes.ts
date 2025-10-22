@@ -59,6 +59,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth (replaces manual OIDC setup)
   await setupAuth(app);
 
+  // Debug endpoint
+  app.get('/__debug', (_req, res) => {
+    const pkg = require('../package.json');
+    res.type('html').send(`
+      <h1>Bureau Social — Debug</h1>
+      <pre>${JSON.stringify({
+        env: Object.keys(process.env),
+        node: process.version,
+        deps: pkg.dependencies
+      }, null, 2)}</pre>
+    `);
+  });
+
   // Auth user endpoint
   app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
