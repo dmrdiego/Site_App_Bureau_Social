@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
+import { LanguageToggle } from "./LanguageToggle";
 import logoImage from "@assets/Pt-BS_1760236872718.png";
 
 export function PublicNav() {
@@ -53,6 +54,7 @@ export function PublicNav() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
+            <LanguageToggle />
             <ThemeToggle />
             <Button
               asChild

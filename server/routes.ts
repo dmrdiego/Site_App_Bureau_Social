@@ -46,7 +46,7 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   return isAuthenticated(req, res, async () => {
     const user = req.user as any;
     const userId = user.claims.sub;
-    
+
     const dbUser = await storage.getUser(userId);
     if (!dbUser?.isAdmin) {
       return res.status(403).json({ message: "403: Forbidden - Admin access required" });
@@ -129,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const assembly = await storage.getAssemblyById(id);
-      
+
       if (!assembly) {
         return res.status(404).json({ message: "Assembly not found" });
       }
@@ -445,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const votes = await storage.getVotesByVotingItem(id);
-      
+
       // Get voting item to find assembly ID
       const votingItem = await storage.getVotingItemById(id);
       if (!votingItem) {
@@ -458,14 +458,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate results with proxy votes
       const results = votes.reduce((acc, vote) => {
         const voto = vote.voto.toLowerCase();
-        
+
         // Base vote count (1 for the voter themselves)
         let voteWeight = 1;
-        
+
         // Add proxy votes (votes from people who delegated to this voter)
         const receivedProxies = proxies.filter(p => p.receiverId === vote.userId);
         voteWeight += receivedProxies.length;
-        
+
         acc[voto] = (acc[voto] || 0) + voteWeight;
         return acc;
       }, {} as Record<string, number>);
@@ -526,14 +526,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { titulo, tipo, categoria, assemblyId, visivelPara } = req.body;
-      
+
       if (!titulo || !tipo) {
         return res.status(400).json({ message: "Título and tipo are required" });
       }
 
       // Initialize object storage client
       const objStorage = new Client();
-      
+
       // Generate unique filename
       const timestamp = Date.now();
       const sanitizedFilename = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -542,7 +542,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Upload file to object storage
       const uploadResult = await objStorage.uploadFromBytes(objectPath, req.file.buffer);
-      
+
       if (!uploadResult.ok) {
         throw new Error(`Upload failed: ${uploadResult.error}`);
       }
@@ -593,27 +593,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Serve from local file system (for seeded documents)
         const fs = await import('fs');
         const path = await import('path');
-        
+
         // Security: Normalize and validate path to prevent traversal attacks
         const publicDir = path.join(process.cwd(), 'public');
         // Remove leading slash to prevent path.join from treating it as absolute
         const relativePath = document.filePath.replace(/^\/+/, '');
         const requestedPath = path.join(publicDir, relativePath);
         const resolvedPath = path.resolve(requestedPath);
-        
+
         // Ensure the resolved path is still within the public directory
         if (!resolvedPath.startsWith(publicDir)) {
           return res.status(403).json({ message: "Access denied" });
         }
-        
+
         if (!fs.existsSync(resolvedPath)) {
           return res.status(404).json({ message: "File not found" });
         }
-        
+
         const mimeType = document.tipo === 'pdf' 
           ? 'application/pdf' 
           : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-        
+
         res.setHeader('Content-Type', mimeType);
         res.setHeader('Content-Disposition', `attachment; filename="${document.titulo}.${document.tipo}"`);
         return res.sendFile(resolvedPath);
@@ -621,14 +621,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Otherwise, try object storage
       const objStorage = new Client();
-      
+
       // Get file from object storage
       const downloadResult = await objStorage.downloadAsBytes(document.filePath);
-      
+
       if (!downloadResult.ok) {
         return res.status(404).json({ message: "File not found in storage" });
       }
-      
+
       // Get file metadata for mime type
       const objectEntity = await storage.getObjectEntity(document.filePath);
       const mimeType = (objectEntity?.metadata as any)?.mimeType || 'application/octet-stream';
@@ -650,7 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { titulo, tipo, categoria, visivelPara, assemblyId } = req.body;
-      
+
       const document = await storage.getDocumentById(id);
       if (!document) {
         return res.status(404).json({ message: "Document not found" });
@@ -676,7 +676,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const document = await storage.getDocumentById(id);
-      
+
       if (!document) {
         return res.status(404).json({ message: "Document not found" });
       }
@@ -685,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!document.filePath.startsWith('/documents/')) {
         const objStorage = new Client();
         const deleteResult = await objStorage.delete(document.filePath);
-        
+
         if (!deleteResult.ok) {
           console.warn(`Failed to delete file from storage: ${deleteResult.error}`);
         }
@@ -836,7 +836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/assemblies/:id/presences", requireAuth, async (req: Request, res: Response) => {
     try {
       const assemblyId = parseInt(req.params.id);
-      
+
       // Validate assembly exists
       const assembly = await storage.getAssemblyById(assemblyId);
       if (!assembly) {
@@ -846,7 +846,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if already confirmed
       const existingPresences = await storage.getPresencesByAssembly(assemblyId);
       const alreadyConfirmed = existingPresences.find(p => p.userId === getUserId(req));
-      
+
       if (alreadyConfirmed) {
         return res.status(400).json({ message: "Presence already confirmed" });
       }
@@ -870,23 +870,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/assemblies/:id/download-minutes", requireAuth, async (req: Request, res: Response) => {
     try {
       const assemblyId = parseInt(req.params.id);
-      
+
       // Find the minutes document for this assembly
       const documents = await storage.getDocumentsByAssembly(assemblyId);
       const minutesDoc = documents.find(doc => doc.tipo === 'ata');
-      
+
       if (!minutesDoc || !minutesDoc.filePath) {
         return res.status(404).json({ message: "Minutes not found" });
       }
-      
+
       // Download from Object Storage
       const client = new Client();
       const result = await client.downloadAsBytes(minutesDoc.filePath);
-      
+
       if (!result.ok) {
         throw new Error(`Download failed: ${result.error}`);
       }
-      
+
       // Send PDF - result.value is a tuple [buffer, metadata]
       const [fileBytes] = result.value;
       res.setHeader('Content-Type', 'application/pdf');
@@ -902,9 +902,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return isAuthenticated(req, res, async () => {
       const user = req.user as any;
       const userId = user.claims.sub;
-      
+
       const dbUser = await storage.getUser(userId);
-      
+
       if (!dbUser?.isAdmin && !dbUser?.isDirecao) {
         return res.status(403).json({ message: "403: Forbidden - Admin or Direção access required" });
       }
@@ -950,7 +950,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             acc[voto] = (acc[voto] || 0) + 1;
             return acc;
           }, {} as Record<string, number>);
-          
+
           return {
             item,
             results,
@@ -970,9 +970,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const client = new Client();
       const filename = `ata-${assemblyId}-${Date.now()}.pdf`;
       const privatePath = `${process.env.PRIVATE_OBJECT_DIR}/${filename}`;
-      
+
       const uploadResult = await client.uploadFromBytes(privatePath, pdfBuffer);
-      
+
       if (!uploadResult.ok) {
         throw new Error(`PDF upload failed: ${uploadResult.error}`);
       }
@@ -1056,7 +1056,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate that we're not allowing dangerous updates
       const allowedFields = ['categoria', 'numeroSocio', 'telefone', 'isAdmin', 'isDirecao'];
       const filteredUpdates: any = {};
-      
+
       for (const field of allowedFields) {
         if (field in updates) {
           filteredUpdates[field] = updates[field];
@@ -1064,7 +1064,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedUser = await storage.updateUser(userId, filteredUpdates);
-      
+
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -1114,7 +1114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           for (let i = 0; i < destinatarios.length; i += batchSize) {
             const batch = destinatarios.slice(i, i + batchSize);
-            
+
             await Promise.all(
               batch.map(async (user) => {
                 try {
@@ -1146,6 +1146,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message || "Failed to send broadcast" });
     }
   });
+
+  // ============================================================================
+  // PUBLIC ENDPOINTS - Inscrição
+  // ============================================================================
+
+  app.post('/api/public/inscricao', async (req, res) => {
+    const { firstName, lastName, email, telefone, categoria, motivacao } = req.body;
+
+    try {
+      // Enviar email para admin
+      const admins = await storage.getAdmins(); // Assuming storage has a getAdmins function
+
+      for (const admin of admins) {
+        await sendEmail({
+          to: admin.email!,
+          subject: 'Nova Inscrição de Associado',
+          html: `
+            <h2>Nova Inscrição Recebida</h2>
+            <p><strong>Nome:</strong> ${firstName} ${lastName}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Telefone:</strong> ${telefone || 'Não fornecido'}</p>
+            <p><strong>Categoria:</strong> ${categoria}</p>
+            <p><strong>Motivação:</strong></p>
+            <p>${motivacao || 'Não fornecida'}</p>
+          `
+        });
+      }
+
+      // Enviar email de confirmação para o candidato
+      await sendEmail({
+        to: email,
+        subject: 'Inscrição Recebida - Bureau Social',
+        html: `
+          <h2>Obrigado pela sua inscrição!</h2>
+          <p>Olá ${firstName},</p>
+          <p>Recebemos a sua candidatura para se tornar associado do Bureau Social.</p>
+          <p>Entraremos em contacto em breve com mais informações.</p>
+          <br>
+          <p>Atenciosamente,<br>Bureau Social</p>
+        `
+      });
+
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============================================================================
+  // ADMIN ENDPOINTS
+  // ============================================================================
 
   const httpServer = createServer(app);
   return httpServer;

@@ -253,13 +253,33 @@ export default function Comunicacoes() {
                 </p>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   variant="outline"
                   onClick={() => setShowPreview(!showPreview)}
                   data-testid="button-toggle-preview"
                 >
                   {showPreview ? "Ocultar" : "Visualizar"} Preview
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const inscricaoLink = `${window.location.origin}/inscricao`;
+                    setSubject("Torne-se Associado do Bureau Social");
+                    setHtml(`Caro(a) Associado(a),
+
+Gostaríamos de convidá-lo a partilhar a oportunidade de se tornar associado do Bureau Social com amigos e colegas.
+
+Para se candidatar, basta aceder ao seguinte link:
+${inscricaoLink}
+
+O formulário é simples e rápido de preencher.
+
+Atenciosamente,
+Bureau Social`);
+                  }}
+                >
+                  Template: Convite Inscrição
                 </Button>
               </div>
 

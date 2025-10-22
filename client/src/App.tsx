@@ -12,11 +12,13 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
+import FormularioInscricao from "@/pages/FormularioInscricao";
 import Dashboard from "@/pages/Dashboard";
 import Assemblies from "@/pages/Assemblies";
 import Votacoes from "@/pages/Votacoes";
 import Documentos from "@/pages/Documentos";
 import Perfil from "@/pages/Perfil";
+import EditarPerfil from "@/pages/EditarPerfil";
 import AdminCMS from "@/pages/AdminCMS";
 import NovaAssembleia from "@/pages/NovaAssembleia";
 import AdminAssociados from "@/pages/AdminAssociados";
@@ -32,6 +34,7 @@ function Router() {
         // Public routes
         <>
           <Route path="/" component={Landing} />
+          <Route path="/inscricao" component={FormularioInscricao} />
           <Route component={NotFound} />
         </>
       ) : (
@@ -44,6 +47,7 @@ function Router() {
           <Route path="/votacoes" component={Votacoes} />
           <Route path="/documentos" component={Documentos} />
           <Route path="/perfil" component={Perfil} />
+          <Route path="/perfil/editar" component={EditarPerfil} />
           <Route path="/admin/cms" component={AdminCMS} />
           <Route path="/admin/associados" component={AdminAssociados} />
           <Route path="/admin/comunicacoes" component={Comunicacoes} />

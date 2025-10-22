@@ -3,9 +3,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Mail, Phone, Calendar, User, Shield } from "lucide-react";
+import { Mail, Phone, Calendar, User, Shield, Edit } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Perfil() {
   const { toast } = useToast();
@@ -39,11 +41,19 @@ export default function Perfil() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="heading-perfil">Meu Perfil</h1>
-        <p className="text-muted-foreground">
-          Informações da sua conta de associado
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="heading-perfil">Meu Perfil</h1>
+          <p className="text-muted-foreground">
+            Informações da sua conta de associado
+          </p>
+        </div>
+        <Link href="/perfil/editar">
+          <Button variant="outline">
+            <Edit className="h-4 w-4 mr-2" />
+            Editar Perfil
+          </Button>
+        </Link>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">

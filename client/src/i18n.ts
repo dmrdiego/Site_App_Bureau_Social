@@ -223,6 +223,84 @@ const resources = {
           aberta: 'Aberta',
           fechada: 'Fechada'
         }
+      },
+      // Assembleias
+      assemblies: {
+        title: 'Assembleias Gerais',
+        subtitle: 'Consulte as assembleias agendadas e passadas',
+        new: 'Nova Assembleia',
+        noAssemblies: 'Nenhuma assembleia disponível',
+        scheduled: 'Agendadas',
+        inProgress: 'Em Curso',
+        closed: 'Encerradas'
+      },
+      // Votações
+      votes: {
+        title: 'Votações',
+        subtitle: 'Participe nas votações abertas e consulte resultados passados',
+        open: 'Votações Abertas',
+        pending: 'Aguardando Abertura',
+        closed: 'Votações Encerradas',
+        noVotes: 'Nenhuma votação disponível',
+        voteFor: 'A Favor',
+        voteAgainst: 'Contra',
+        abstain: 'Abstenção'
+      },
+      // Documentos
+      documents: {
+        title: 'Documentos',
+        subtitle: 'Acesse documentos institucionais e atas',
+        category: 'Categoria',
+        allCategories: 'Todas as Categorias',
+        download: 'Baixar',
+        noDocuments: 'Nenhum documento disponível'
+      },
+      // Perfil
+      profile: {
+        title: 'Meu Perfil',
+        subtitle: 'Informações da sua conta de associado',
+        personalInfo: 'Informação Pessoal',
+        accountDetails: 'Detalhes da Conta',
+        participation: 'Estatísticas de Participação',
+        email: 'Email',
+        phone: 'Telefone',
+        memberNumber: 'Número de Sócio',
+        joinDate: 'Data de Adesão',
+        memberSince: 'Membro desde',
+        status: 'Status',
+        active: 'Ativo',
+        inactive: 'Inativo'
+      },
+      // Admin
+      admin: {
+        cms: {
+          title: 'Editor de Conteúdo (CMS)',
+          subtitle: 'Edite o conteúdo do site público',
+          save: 'Guardar Alterações',
+          sections: 'Secções do Site'
+        },
+        members: {
+          title: 'Gerir Associados',
+          subtitle: 'Administre categorias, permissões e informações dos associados',
+          search: 'Pesquisar por nome, email ou número de sócio',
+          category: 'Categoria',
+          allCategories: 'Todas Categorias',
+          edit: 'Editar',
+          permissions: 'Permissões',
+          admin: 'Administrador',
+          direction: 'Direção'
+        },
+        communications: {
+          title: 'Comunicações',
+          subtitle: 'Envie emails em massa para os associados',
+          newMessage: 'Nova Mensagem',
+          subject: 'Assunto',
+          message: 'Mensagem',
+          recipients: 'Destinatários',
+          segment: 'Segmento',
+          sendTest: 'Enviar Teste',
+          sendBroadcast: 'Enviar Email'
+        }
       }
     }
   },
@@ -446,6 +524,84 @@ const resources = {
           encerrada: 'Closed',
           aberta: 'Open',
           fechada: 'Closed'
+        }
+      },
+      // Assembleias
+      assemblies: {
+        title: 'General Assemblies',
+        subtitle: 'View scheduled and past assemblies',
+        new: 'New Assembly',
+        noAssemblies: 'No assemblies available',
+        scheduled: 'Scheduled',
+        inProgress: 'In Progress',
+        closed: 'Closed'
+      },
+      // Votações
+      votes: {
+        title: 'Votes',
+        subtitle: 'Participate in open votes and view past results',
+        open: 'Open Votes',
+        pending: 'Awaiting Opening',
+        closed: 'Closed Votes',
+        noVotes: 'No votes available',
+        voteFor: 'For',
+        voteAgainst: 'Against',
+        abstain: 'Abstain'
+      },
+      // Documentos
+      documents: {
+        title: 'Documents',
+        subtitle: 'Access institutional documents and minutes',
+        category: 'Category',
+        allCategories: 'All Categories',
+        download: 'Download',
+        noDocuments: 'No documents available'
+      },
+      // Perfil
+      profile: {
+        title: 'My Profile',
+        subtitle: 'Your member account information',
+        personalInfo: 'Personal Information',
+        accountDetails: 'Account Details',
+        participation: 'Participation Statistics',
+        email: 'Email',
+        phone: 'Phone',
+        memberNumber: 'Member Number',
+        joinDate: 'Join Date',
+        memberSince: 'Member since',
+        status: 'Status',
+        active: 'Active',
+        inactive: 'Inactive'
+      },
+      // Admin
+      admin: {
+        cms: {
+          title: 'Content Editor (CMS)',
+          subtitle: 'Edit public website content',
+          save: 'Save Changes',
+          sections: 'Website Sections'
+        },
+        members: {
+          title: 'Manage Members',
+          subtitle: 'Manage categories, permissions and member information',
+          search: 'Search by name, email or member number',
+          category: 'Category',
+          allCategories: 'All Categories',
+          edit: 'Edit',
+          permissions: 'Permissions',
+          admin: 'Administrator',
+          direction: 'Board'
+        },
+        communications: {
+          title: 'Communications',
+          subtitle: 'Send mass emails to members',
+          newMessage: 'New Message',
+          subject: 'Subject',
+          message: 'Message',
+          recipients: 'Recipients',
+          segment: 'Segment',
+          sendTest: 'Send Test',
+          sendBroadcast: 'Send Email'
         }
       }
     }
