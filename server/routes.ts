@@ -132,33 +132,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdBy: getUserId(req),
       });
 
-      // Enviar emails para todos os associados
-      try {
-        const users = await storage.getAllUsers();
-        for (const user of users) {
-          if (user.email) {
-            const emailHtml = createNovaAssembleiaEmail(
-              `${user.firstName} ${user.lastName}`,
-              {
-                titulo: assembly.titulo,
-                dataHora: assembly.dataHora,
-                localizacao: assembly.localizacao || '',
-                descricao: assembly.descricao || undefined,
-              }
-            );
-            await sendEmail({
-              to: user.email,
-              subject: `Nova Assembleia: ${assembly.titulo}`,
-              html: emailHtml,
-            });
-          }
-        }
-        console.log(`Emails enviados para ${users.length} associados sobre nova assembleia`);
-      } catch (emailError) {
-        console.error('Erro ao enviar emails de nova assembleia:', emailError);
-      }
-
       res.status(201).json(assembly);
+
+      // Enviar emails de forma assíncrona (fire-and-forget)
+      setImmediate(async () => {
+        try {
+          const users = await storage.getAllUsers();
+          await Promise.all(
+            users.map(async (user) => {
+              if (user.email) {
+                try {
+                  const emailHtml = createNovaAssembleiaEmail(
+                    `${user.firstName} ${user.lastName}`,
+                    {
+                      titulo: assembly.titulo,
+                      dataHora: assembly.dataAssembleia,
+                      localizacao: assembly.local || '',
+                      descricao: assembly.convocatoria || undefined,
+                    }
+                  );
+                  await sendEmail({
+                    to: user.email,
+                    subject: `Nova Assembleia: ${assembly.titulo}`,
+                    html: emailHtml,
+                  });
+                } catch (emailError) {
+                  console.error(`Erro ao enviar email para ${user.email}:`, emailError);
+                }
+              }
+            })
+          );
+          console.log(`Emails enviados para ${users.length} associados sobre nova assembleia`);
+        } catch (error) {
+          console.error('Erro geral ao enviar emails de nova assembleia:', error);
+        }
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Failed to create assembly" });
     }
@@ -239,30 +247,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const proxy = await storage.createProxy(proxyData);
 
-      // Enviar email ao receiver
-      try {
-        const giver = await storage.getUser(userId);
-        const receiver = await storage.getUser(receiverId);
-        if (receiver?.email && giver) {
-          const emailHtml = createProcuracaoRecebidaEmail(
-            `${receiver.firstName} ${receiver.lastName}`,
-            `${giver.firstName} ${giver.lastName}`,
-            {
-              titulo: assembly.titulo,
-              dataHora: assembly.dataHora,
-            }
-          );
-          await sendEmail({
-            to: receiver.email,
-            subject: `Nova Procuração Recebida - ${assembly.titulo}`,
-            html: emailHtml,
-          });
-        }
-      } catch (emailError) {
-        console.error('Erro ao enviar email de procuração:', emailError);
-      }
-
       res.status(201).json(proxy);
+
+      // Enviar email de forma assíncrona (fire-and-forget)
+      setImmediate(async () => {
+        try {
+          const giver = await storage.getUser(userId);
+          const receiver = await storage.getUser(receiverId);
+          if (receiver?.email && giver) {
+            const emailHtml = createProcuracaoRecebidaEmail(
+              `${receiver.firstName} ${receiver.lastName}`,
+              `${giver.firstName} ${giver.lastName}`,
+              {
+                titulo: assembly.titulo,
+                dataHora: assembly.dataAssembleia,
+              }
+            );
+            await sendEmail({
+              to: receiver.email,
+              subject: `Nova Procuração Recebida - ${assembly.titulo}`,
+              html: emailHtml,
+            });
+          }
+        } catch (emailError) {
+          console.error('Erro ao enviar email de procuração:', emailError);
+        }
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Failed to manage proxy" });
     }
@@ -910,34 +920,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ataGerada: true,
       });
 
-      // Enviar emails para todos os associados
-      try {
-        const users = await storage.getAllUsers();
-        for (const user of users) {
-          if (user.email) {
-            const emailHtml = createAtaDisponivelEmail(
-              `${user.firstName} ${user.lastName}`,
-              {
-                titulo: assembly.titulo,
-                dataHora: assembly.dataHora,
-              }
-            );
-            await sendEmail({
-              to: user.email,
-              subject: `Ata Disponível - ${assembly.titulo}`,
-              html: emailHtml,
-            });
-          }
-        }
-        console.log(`Emails enviados para ${users.length} associados sobre ata disponível`);
-      } catch (emailError) {
-        console.error('Erro ao enviar emails de ata disponível:', emailError);
-      }
-
       res.json({ 
         success: true, 
         document,
         message: 'Ata gerada com sucesso',
+      });
+
+      // Enviar emails de forma assíncrona (fire-and-forget)
+      setImmediate(async () => {
+        try {
+          const users = await storage.getAllUsers();
+          await Promise.all(
+            users.map(async (user) => {
+              if (user.email) {
+                try {
+                  const emailHtml = createAtaDisponivelEmail(
+                    `${user.firstName} ${user.lastName}`,
+                    {
+                      titulo: assembly.titulo,
+                      dataHora: assembly.dataAssembleia,
+                    }
+                  );
+                  await sendEmail({
+                    to: user.email,
+                    subject: `Ata Disponível - ${assembly.titulo}`,
+                    html: emailHtml,
+                  });
+                } catch (emailError) {
+                  console.error(`Erro ao enviar email para ${user.email}:`, emailError);
+                }
+              }
+            })
+          );
+          console.log(`Emails enviados para ${users.length} associados sobre ata disponível`);
+        } catch (error) {
+          console.error('Erro geral ao enviar emails de ata disponível:', error);
+        }
       });
     } catch (error) {
       console.error("Minutes generation error:", error);
