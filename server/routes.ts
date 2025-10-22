@@ -59,8 +59,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth (replaces manual OIDC setup)
   await setupAuth(app);
 
-  // Debug endpoint
-  app.get('/__debug', (_req, res) => {
+  // Debug endpoint (admin only, development only)
+  app.get('/__debug', requireAdmin, (_req, res) => {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(404).send('Not found');
+    }
     const pkg = require('../package.json');
     res.type('html').send(`
       <h1>Bureau Social — Debug</h1>

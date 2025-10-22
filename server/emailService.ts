@@ -68,7 +68,7 @@ export function createNovaAssembleiaEmail(userName: string, assembleia: {
             
             <div class="highlight">
               <h2>${assembleia.titulo}</h2>
-              <p><strong>📅 Data e Hora:</strong> ${dataFormatada}</p>
+              <p><strong>Data e Hora:</strong> ${dataFormatada}</p>
               <p><strong>📍 Local:</strong> ${assembleia.localizacao}</p>
               ${assembleia.descricao ? `<p><strong>Descrição:</strong> ${assembleia.descricao}</p>` : ''}
             </div>
@@ -118,7 +118,7 @@ export function createAtaDisponivelEmail(userName: string, assembleia: {
             
             <div class="highlight">
               <h2>${assembleia.titulo}</h2>
-              <p><strong>📅 Data:</strong> ${dataFormatada}</p>
+              <p><strong>Data:</strong> ${dataFormatada}</p>
             </div>
 
             <p>Pode consultar e fazer o download da ata através do Portal de Associados, na secção de Assembleias.</p>
@@ -166,8 +166,8 @@ export function createProcuracaoRecebidaEmail(userName: string, giverName: strin
             
             <div class="highlight">
               <p><strong>👤 Associado:</strong> ${giverName}</p>
-              <p><strong>📋 Assembleia:</strong> ${assembleia.titulo}</p>
-              <p><strong>📅 Data e Hora:</strong> ${dataFormatada}</p>
+              <p><strong>Assembleia:</strong> ${assembleia.titulo}</p>
+              <p><strong>Data e Hora:</strong> ${dataFormatada}</p>
             </div>
 
             <p>O seu voto nesta assembleia terá peso duplo, representando também o voto de ${giverName}.</p>
@@ -211,7 +211,7 @@ export function createNovoDocumentoEmail(userName: string, documento: {
             
             <div class="highlight">
               <h2>${documento.titulo}</h2>
-              <p><strong>📁 Categoria:</strong> ${documento.categoria}</p>
+              <p><strong>Categoria:</strong> ${documento.categoria}</p>
             </div>
 
             <p>Pode consultar o documento através do Portal de Associados, na secção de Documentos.</p>
@@ -259,7 +259,7 @@ export function createLembreteVotacaoEmail(
       <body>
         <div class="container">
           <div class="header">
-            <h1>⏰ Lembrete de Votação</h1>
+            <h1>Lembrete de Votação</h1>
           </div>
           <div class="content">
             <p>Caro(a) ${userName},</p>
@@ -267,8 +267,8 @@ export function createLembreteVotacaoEmail(
             
             <div class="highlight">
               <h2>${votingInfo.assemblyTitulo}</h2>
-              <p><strong>📋 Items pendentes:</strong> ${votingInfo.itemsPendentes}</p>
-              <p><strong>📅 Data limite:</strong> ${dataFormatada}</p>
+              <p><strong>Items pendentes:</strong> ${votingInfo.itemsPendentes}</p>
+              <p><strong>Data limite:</strong> ${dataFormatada}</p>
             </div>
 
             <p>A sua participação é importante para as decisões do Bureau Social. Por favor, não se esqueça de exercer o seu direito de voto.</p>
@@ -318,7 +318,7 @@ export function createQuotaPendenteEmail(
       <body>
         <div class="container">
           <div class="header">
-            <h1>💶 Quota Pendente</h1>
+            <h1>Quota Pendente</h1>
           </div>
           <div class="content">
             <p>Caro(a) ${userName},</p>
@@ -326,9 +326,9 @@ export function createQuotaPendenteEmail(
             
             <div class="highlight">
               <h2>Detalhes da Quota</h2>
-              <p><strong>📅 Ano:</strong> ${quotaInfo.ano}</p>
-              <p><strong>💰 Valor:</strong> €${quotaInfo.valor.toFixed(2)}</p>
-              <p><strong>⏱️ Data limite:</strong> ${dataFormatada}</p>
+              <p><strong>Ano:</strong> ${quotaInfo.ano}</p>
+              <p><strong>Valor:</strong> €${quotaInfo.valor.toFixed(2)}</p>
+              <p><strong>Data limite:</strong> ${dataFormatada}</p>
             </div>
 
             <p>O seu contributo é essencial para continuarmos a desenvolver projetos de impacto social positivo em Portugal.</p>
