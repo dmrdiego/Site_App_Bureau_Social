@@ -134,6 +134,8 @@ export default function Documentos() {
                   <SelectItem value="ata">Atas</SelectItem>
                   <SelectItem value="regulamento">Regulamentos</SelectItem>
                   <SelectItem value="relatorio">Relatórios</SelectItem>
+                  <SelectItem value="pdf">PDF</SelectItem>
+                  <SelectItem value="docx">DOCX</SelectItem>
                   <SelectItem value="outro">Outros</SelectItem>
                 </SelectContent>
               </Select>
@@ -146,7 +148,7 @@ export default function Documentos() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="socios">Sócios</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="direcao">Direção</SelectItem>
                 </SelectContent>
@@ -437,6 +439,8 @@ function EditDocumentDialog({
                 <SelectItem value="ata">Ata</SelectItem>
                 <SelectItem value="regulamento">Regulamento</SelectItem>
                 <SelectItem value="relatorio">Relatório</SelectItem>
+                <SelectItem value="pdf">PDF</SelectItem>
+                <SelectItem value="docx">DOCX</SelectItem>
                 <SelectItem value="outro">Outro</SelectItem>
               </SelectContent>
             </Select>
@@ -460,6 +464,7 @@ function EditDocumentDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="socios">Sócios</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="direcao">Direção</SelectItem>
               </SelectContent>
@@ -668,6 +673,8 @@ function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                   <SelectItem value="ata">Ata</SelectItem>
                   <SelectItem value="regulamento">Regulamento</SelectItem>
                   <SelectItem value="relatorio">Relatório</SelectItem>
+                  <SelectItem value="pdf">PDF</SelectItem>
+                  <SelectItem value="docx">DOCX</SelectItem>
                   <SelectItem value="outro">Outro</SelectItem>
                 </SelectContent>
               </Select>
@@ -692,6 +699,7 @@ function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="socios">Sócios</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="direcao">Direção</SelectItem>
                 </SelectContent>
