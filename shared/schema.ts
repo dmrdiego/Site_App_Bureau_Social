@@ -90,6 +90,10 @@ export type InsertAssembly = typeof assemblies.$inferInsert;
 export const insertAssemblySchema = createInsertSchema(assemblies).omit({ 
   id: true, 
   createdAt: true 
+}).extend({
+  dataAssembleia: z.union([z.string(), z.date()]).transform((val) => 
+    typeof val === 'string' ? new Date(val) : val
+  ),
 });
 export const selectAssemblySchema = createSelectSchema(assemblies);
 
