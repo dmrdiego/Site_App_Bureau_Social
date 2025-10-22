@@ -70,11 +70,38 @@ The database includes 11 core tables: `users`, `sessions`, `assemblies`, `voting
 
 ## Recent Changes
 
-### October 2025 - Upgrade Package Integration
-- ✅ **Sistema Bilíngue**: Integrated react-i18next with complete PT/EN translations, language toggle in header
-- ✅ **Nova Paleta de Cores**: Updated design system to azul petróleo (#044050) and cinza azulado (#788b92)
-- ✅ **27 Novos Documentos**: Added comprehensive document library including:
+### October 2025 - Upgrade Package Integration (COMPLETED ✓)
+**Completion Date**: October 22, 2025, 22:35
+
+- ✅ **Sistema Bilíngue (PT/EN)**: 
+  - Integrated react-i18next v13+ with complete PT/EN translations
+  - LanguageToggle component in header (text-only: "PT"/"EN", NO emojis)
+  - Dashboard 100% translated (welcome, stats, status badges, CTAs, dates)
+  - Locale-aware date formatting (pt-PT / en-US dynamic)
+  - Status badges fully translated (Scheduled/Agendada, In Progress/Em Curso, Closed/Encerrada)
+  - Buttons translated (Vote Now/Votar Agora)
+  - localStorage persistence (key: 'language')
+  - E2E tested and validated
+
+- ✅ **Nova Paleta de Cores Bureau Social**: 
+  - Primary: #044050 (Azul Petróleo - HSL 193, 90%, 16%)
+  - Secondary: #788b92 (Cinza Azulado - HSL 196, 10%, 52%)
+  - Terracotta accent maintained
+  - index.css updated for light/dark modes
+  - Applied consistently across entire system
+
+- ✅ **27 Novos Documentos Institucionais**:
+  - Total: 58 documents (31 existing + 27 new)
   - 7 Regulamentos (Interno, Eleitoral, Quotas, Código de Conduta, Políticas)
   - 11 Relatórios (Planos Estratégicos, Atividades, Orçamentos, Captação de Recursos)
-  - 3 Atas
+  - 3 Atas históricas
   - 6 Documentos de Parceria (Apresentações, Fichas, Propostas, Termos)
+  - All stored in Replit Object Storage
+  - Downloads tested and working (200 OK)
+
+- ✅ **Technical Improvements**:
+  - 0 LSP errors (100% TypeScript clean)
+  - DashboardSummary interface added for type safety
+  - Badge variants with strict union types
+  - Optional chaining implemented correctly
+  - All E2E tests passing

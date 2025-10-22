@@ -202,6 +202,27 @@ const resources = {
         back: 'Voltar',
         next: 'Próximo',
         previous: 'Anterior'
+      },
+      // Dashboard (Portal)
+      dashboard: {
+        welcome: 'Bem-vindo, {{name}}!',
+        summary: 'Aqui está um resumo da sua atividade como associado do Bureau Social.',
+        upcomingAssemblies: 'Próximas Assembleias',
+        pendingVotes: 'Votações Pendentes',
+        recentDocuments: 'Documentos Recentes',
+        notifications: 'Notificações',
+        viewAll: 'Ver todas',
+        noAssemblies: 'Nenhuma assembleia agendada no momento',
+        noVotes: 'Nenhuma votação pendente no momento',
+        noDocuments: 'Nenhum documento recente',
+        voteNow: 'Votar Agora',
+        status: {
+          agendada: 'Agendada',
+          em_curso: 'Em Curso',
+          encerrada: 'Encerrada',
+          aberta: 'Aberta',
+          fechada: 'Fechada'
+        }
       }
     }
   },
@@ -405,6 +426,27 @@ const resources = {
         back: 'Back',
         next: 'Next',
         previous: 'Previous'
+      },
+      // Dashboard (Portal)
+      dashboard: {
+        welcome: 'Welcome, {{name}}!',
+        summary: 'Here is a summary of your activity as a Bureau Social member.',
+        upcomingAssemblies: 'Upcoming Assemblies',
+        pendingVotes: 'Pending Votes',
+        recentDocuments: 'Recent Documents',
+        notifications: 'Notifications',
+        viewAll: 'View all',
+        noAssemblies: 'No assemblies scheduled at the moment',
+        noVotes: 'No pending votes at the moment',
+        noDocuments: 'No recent documents',
+        voteNow: 'Vote Now',
+        status: {
+          agendada: 'Scheduled',
+          em_curso: 'In Progress',
+          encerrada: 'Closed',
+          aberta: 'Open',
+          fechada: 'Closed'
+        }
       }
     }
   }

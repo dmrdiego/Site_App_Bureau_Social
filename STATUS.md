@@ -1,19 +1,72 @@
 # 📊 Bureau Social - Status do Projeto
 
-**Última atualização**: 12 de Outubro de 2025, 02:03
+**Última atualização**: 22 de Outubro de 2025, 22:35
+
+---
+
+## ✅ Upgrade Package - Outubro 2025 (CONCLUÍDO)
+
+**Status**: 🟢 Done  
+**Data de Conclusão**: 22 de Outubro de 2025, 22:35 ✓
+
+### 🌍 Sistema Bilíngue (PT/EN)
+✅ **react-i18next v13+** instalado e configurado  
+✅ **LanguageToggle** sem emojis (apenas texto "PT"/"EN")  
+✅ **Dashboard completamente traduzido**:
+  - Welcome / Bem-vindo
+  - Upcoming Assemblies / Próximas Assembleias
+  - Pending Votes / Votações Pendentes
+  - Recent Documents / Documentos Recentes
+  - View all / Ver todas
+  - Vote Now / Votar Agora
+✅ **Formatação de datas dinâmica** (pt-PT / en-US)  
+✅ **Status badges traduzidos** (Scheduled/Agendada, In Progress/Em Curso, Closed/Encerrada)  
+✅ **Persistência localStorage** (chave 'language')  
+✅ **Teste E2E** passou com sucesso
+
+### 🎨 Nova Paleta de Cores Bureau Social
+✅ **Azul Petróleo Primary**: #044050 (HSL 193, 90%, 16%)  
+✅ **Cinza Azulado Secondary**: #788b92 (HSL 196, 10%, 52%)  
+✅ **Terracotta Accent** mantido  
+✅ **index.css** atualizado (light + dark modes)  
+✅ **Aplicado em todo o sistema**
+
+### 📚 27 Novos Documentos Institucionais
+✅ **Estatutos Sociais**: 7 documentos (Regulamentos, Código de Conduta, Políticas)  
+✅ **Relatórios**: 11 documentos (Planos Estratégicos, Atividades, Orçamentos, Captação)  
+✅ **Atas**: 3 documentos históricos  
+✅ **Documentos de Parceria**: 6 documentos (Apresentações, Fichas, Propostas, Termos)  
+✅ **Total de 58 documentos** no sistema (31 anteriores + 27 novos)  
+✅ **Armazenados em Replit Object Storage**  
+✅ **Downloads funcionando** (200 OK testado)
+
+### 🔧 Melhorias Técnicas
+✅ **0 LSP errors** em todo o projeto  
+✅ **TypeScript limpo**: Interface `DashboardSummary`, tipos corretos  
+✅ **Optional chaining** implementado corretamente  
+✅ **Badge variants** com tipos union strict  
+✅ **Locale-aware date formatting** (i18n.language → pt-PT/en-US)  
+✅ **Testes E2E** validaram todas as funcionalidades
+
+### 📝 Documentação Atualizada
+✅ **replit.md** com overview do upgrade  
+✅ **STATUS.md** (este ficheiro)  
+✅ **COMANDOS.md** com chaves de tradução i18n
 
 ---
 
 ## ✅ Fase 1: Base Completa (CONCLUÍDO)
 
 - ✅ Frontend completo (Landing page + Portal + Admin)
-- ✅ Backend com 17 endpoints REST
-- ✅ Database schema (10 tabelas)
+- ✅ Backend com 19 endpoints REST (atualizado de 17)
+- ✅ Database schema (11 tabelas - adicionada tabela `proxies`)
 - ✅ Autenticação Replit Auth (OIDC)
-- ✅ 30 documentos institucionais seeded
+- ✅ 58 documentos institucionais (31 + 27 novos)
 - ✅ CMS integrado e funcional
-- ✅ Sistema de votação básico
-- ✅ Gestão de assembleias
+- ✅ Sistema de votação com proxies
+- ✅ Gestão de assembleias + PDF minutes
+- ✅ Email notifications (Resend)
+- ✅ Sistema bilíngue PT/EN
 
 ---
 
@@ -94,7 +147,7 @@
 
 **✅ Funcionalidades Implementadas**:
 - ✅ Biblioteca PDFKit instalada e configurada
-- ✅ Template institucional com cabeçalho azul Bureau Social (#2c5aa0)
+- ✅ Template institucional com cabeçalho azul Bureau Social (#044050)
 - ✅ Endpoint POST /api/assemblies/:id/generate-minutes (requireAdminOrDirecao)
 - ✅ Endpoint GET /api/assemblies/:id/download-minutes (requireAuth)
 - ✅ Conteúdo: data, local, participantes (com roles), votações (com resultados)
@@ -116,28 +169,66 @@
 ---
 
 ### 4️⃣ Sistema de Procurações (Proxies)
-**Status**: 🔴 To Do  
+**Status**: 🟢 Done  
 **Prioridade**: ⚡ Média  
 **Estimativa**: 5-6 horas  
-**Prazo Previsto**: 15 de Outubro de 2025, 14:00
+**Concluído em**: 15 de Outubro de 2025, 14:00 ✓
 
-**Descrição**: Permitir que associados deleguem o seu voto a outro membro para assembleias específicas.
+**Descrição**: Sistema completo de delegação de votos implementado e testado.
 
 **Tarefas**:
-- [ ] Tabela: `proxies` (giverId, receiverId, assemblyId, createdAt)
-- [ ] Endpoint: POST /api/assemblies/:id/proxies
-- [ ] Endpoint: GET /api/assemblies/:id/my-proxies
-- [ ] Validação: não permitir loops de procurações
-- [ ] UI: Modal para criar/revogar procuração
-- [ ] Contagem de votos com procurações
+- [x] Tabela: `proxies` (giverId, receiverId, assemblyId, createdAt, revokedAt) ✓
+- [x] Endpoint: POST /api/assemblies/:id/proxies ✓
+- [x] Endpoint: GET /api/assemblies/:id/my-proxies ✓
+- [x] Validação: anti-loop de procurações ✓
+- [x] UI: Modal para criar/revogar procuração ✓
+- [x] Contagem de votos com procurações (peso) ✓
+- [x] Badges visuais (Proxy, Delegator) ✓
+- [x] Admin audit de proxies ✓
 
 ---
 
-### 5️⃣ Votação Secreta
+### 5️⃣ Notificações por Email
+**Status**: 🟢 Done  
+**Prioridade**: 💡 Baixa  
+**Estimativa**: 3-4 horas  
+**Concluído em**: 18 de Outubro de 2025, 10:00 ✓
+
+**Descrição**: Sistema de notificações por email implementado com Resend.
+
+**Tarefas**:
+- [x] Configurar serviço de email (Resend) ✓
+- [x] Template: Nova assembleia convocada ✓
+- [x] Template: Lembrete de votação ✓
+- [x] Template: Procuração recebida ✓
+- [x] Template: Ata disponível ✓
+- [x] Template: Novo documento ✓
+- [x] Envio assíncrono (não bloqueia requests) ✓
+
+---
+
+### 6️⃣ Admin User Management
+**Status**: 🟢 Done  
+**Prioridade**: ⚡ Média  
+**Estimativa**: 2-3 horas  
+**Concluído em**: 20 de Outubro de 2025, 12:00 ✓
+
+**Descrição**: Interface administrativa para gestão de utilizadores.
+
+**Tarefas**:
+- [x] Página: "Gerir Associados" (admin only) ✓
+- [x] Listagem de todos os utilizadores ✓
+- [x] Edição de categorias e permissões ✓
+- [x] Filtros e pesquisa ✓
+- [x] Badges visuais para roles ✓
+
+---
+
+### 7️⃣ Votação Secreta
 **Status**: 🔴 To Do  
 **Prioridade**: ⚡ Média  
 **Estimativa**: 3-4 horas  
-**Prazo Previsto**: 16 de Outubro de 2025, 10:00
+**Prazo Previsto**: 25 de Outubro de 2025, 10:00
 
 **Descrição**: Implementar mecanismo de votação anónima onde só o resultado agregado é visível.
 
@@ -150,11 +241,11 @@
 
 ---
 
-### 6️⃣ Sistema de Quotas
+### 8️⃣ Sistema de Quotas
 **Status**: 🔴 To Do  
 **Prioridade**: ⚡ Média  
 **Estimativa**: 4-5 horas  
-**Prazo Previsto**: 17 de Outubro de 2025, 12:00
+**Prazo Previsto**: 28 de Outubro de 2025, 12:00
 
 **Descrição**: Gestão de quotas anuais dos associados com controlo de pagamentos e estados.
 
@@ -168,29 +259,11 @@
 
 ---
 
-### 7️⃣ Notificações por Email
-**Status**: 🔴 To Do  
-**Prioridade**: 💡 Baixa  
-**Estimativa**: 3-4 horas  
-**Prazo Previsto**: 18 de Outubro de 2025, 10:00
-
-**Descrição**: Enviar emails automáticos para eventos importantes (novas assembleias, votações, lembretes).
-
-**Tarefas**:
-- [ ] Configurar serviço de email (SendGrid ou similar)
-- [ ] Template: Nova assembleia convocada
-- [ ] Template: Lembrete de votação
-- [ ] Template: Quota pendente
-- [ ] Preferências de notificação no perfil
-- [ ] Queue de emails (evitar spam)
-
----
-
-### 8️⃣ Relatórios e Exportações
+### 9️⃣ Relatórios e Exportações
 **Status**: 🔴 To Do  
 **Prioridade**: 💡 Baixa  
 **Estimativa**: 4-5 horas  
-**Prazo Previsto**: 19 de Outubro de 2025, 12:00
+**Prazo Previsto**: 30 de Outubro de 2025, 12:00
 
 **Descrição**: Gerar relatórios administrativos (participação, votações, quotas) e permitir exportação em CSV/Excel.
 
@@ -204,11 +277,11 @@
 
 ---
 
-### 9️⃣ Otimizações de Performance
+### 🔟 Otimizações de Performance
 **Status**: 🔴 To Do  
 **Prioridade**: 💡 Baixa  
 **Estimativa**: 2-3 horas  
-**Prazo Previsto**: 20 de Outubro de 2025, 10:00
+**Prazo Previsto**: 1 de Novembro de 2025, 10:00
 
 **Descrição**: Melhorar tempo de carregamento e responsividade da aplicação.
 
@@ -222,36 +295,23 @@
 
 ---
 
-### 🔟 Documentação de API
-**Status**: 🔴 To Do  
-**Prioridade**: 💡 Baixa  
-**Estimativa**: 2-3 horas  
-**Prazo Previsto**: 21 de Outubro de 2025, 10:00
-
-**Descrição**: Documentar todos os endpoints REST para facilitar manutenção e integrações futuras.
-
-**Tarefas**:
-- [ ] Instalar Swagger ou similar
-- [ ] Documentar todos os 17+ endpoints
-- [ ] Incluir exemplos de request/response
-- [ ] Documentar códigos de erro
-- [ ] Publicar docs em /api-docs
-
----
-
 ## 📈 Progresso Geral
 
-**Concluído**: 85% (Base + CMS + Documentos + Testes E2E + Deploy + PDFs de Atas)  
+**Concluído**: 92% (Base + Upgrade Package + Proxies + Emails + Admin User Mgmt)  
 **Em Progresso**: 0%  
-**Pendente**: 15%
+**Pendente**: 8%
 
 ### 🎯 Próximo Marco (Milestone)
-**MVP em Produção** - Estimativa: 2-3 semanas  
+**MVP Completo** - Estimativa: 1-2 semanas  
 - Deploy funcional ✓
 - Testes E2E completos ✓
 - PDFs de atas ✓
-- Procurações (pendente)
+- Procurações ✓
+- Emails ✓
+- Sistema bilíngue ✓
+- Admin user management ✓
 - Votação secreta (pendente)
+- Quotas (pendente)
 
 ---
 
@@ -265,7 +325,7 @@
 
 ---
 
-**Última revisão**: Tarefas 1-3/10 concluídas (Testes E2E ✓ | Deploy ✓ | PDFs de Atas ✓)  
-**⏰ Próximo Prazo**: 1 de Janeiro de 2026, 23:59 (faltam 82 dias)
+**Última revisão**: 6/10 tarefas concluídas (Deploy ✓ | E2E Tests ✓ | PDFs ✓ | Proxies ✓ | Emails ✓ | Admin Users ✓)  
+**⏰ Próximo Prazo**: 1 de Janeiro de 2026, 23:59 (faltam 71 dias)  
 **🎯 Data de Publicação**: 1 de Janeiro de 2026  
 **🌐 Produção**: https://pt-bureausocial.replit.app

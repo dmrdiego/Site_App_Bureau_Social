@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -11,7 +12,18 @@ import { Calendar, Vote, FileText, Bell, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import type { Assembly, VotingItem, Document as Doc, Notification } from "@shared/schema";
 
+interface DashboardSummary {
+  upcomingAssemblies: number;
+  pendingVotes: number;
+  recentDocuments: number;
+  unreadNotifications: number;
+  assemblies: Assembly[];
+  votingItems: VotingItem[];
+  documents: Doc[];
+}
+
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
@@ -29,7 +41,7 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, authLoading, toast]);
 
-  const { data: summary, isLoading } = useQuery({
+  const { data: summary, isLoading } = useQuery<DashboardSummary>({
     queryKey: ["/api/dashboard/summary"],
     enabled: isAuthenticated,
   });
@@ -41,35 +53,35 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Bem-vindo, {user?.firstName}!
+        <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="text-welcome">
+          {t('dashboard.welcome', { name: user?.firstName })}
         </h1>
         <p className="text-muted-foreground">
-          Aqui está um resumo da sua atividade como associado do Bureau Social.
+          {t('dashboard.summary')}
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Próximas Assembleias"
+          title={t('dashboard.upcomingAssemblies')}
           value={summary?.upcomingAssemblies || 0}
           icon={Calendar}
           color="primary"
         />
         <StatCard
-          title="Votações Pendentes"
+          title={t('dashboard.pendingVotes')}
           value={summary?.pendingVotes || 0}
           icon={Vote}
           color="warning"
         />
         <StatCard
-          title="Documentos Recentes"
+          title={t('dashboard.recentDocuments')}
           value={summary?.recentDocuments || 0}
           icon={FileText}
           color="secondary"
         />
         <StatCard
-          title="Notificações"
+          title={t('dashboard.notifications')}
           value={summary?.unreadNotifications || 0}
           icon={Bell}
           color="accent"
@@ -80,11 +92,11 @@ export default function Dashboard() {
         {/* Próximas Assembleias */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-            <CardTitle className="text-xl font-semibold">Próximas Assembleias</CardTitle>
+            <CardTitle className="text-xl font-semibold">{t('dashboard.upcomingAssemblies')}</CardTitle>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/assembleias" data-testid="link-ver-todas-assembleias">
                 <span className="flex items-center gap-1">
-                  Ver todas <ArrowRight className="h-4 w-4" />
+                  {t('dashboard.viewAll')} <ArrowRight className="h-4 w-4" />
                 </span>
               </Link>
             </Button>
@@ -92,14 +104,14 @@ export default function Dashboard() {
           <CardContent>
             {isLoading ? (
               <LoadingList />
-            ) : summary?.assemblies?.length > 0 ? (
+            ) : summary?.assemblies && summary.assemblies.length > 0 ? (
               <div className="space-y-4">
                 {summary.assemblies.map((assembly: Assembly) => (
                   <AssemblyItem key={assembly.id} assembly={assembly} />
                 ))}
               </div>
             ) : (
-              <EmptyState message="Nenhuma assembleia agendada no momento" />
+              <EmptyState message={t('dashboard.noAssemblies')} />
             )}
           </CardContent>
         </Card>
@@ -107,11 +119,11 @@ export default function Dashboard() {
         {/* Votações Pendentes */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-            <CardTitle className="text-xl font-semibold">Votações Pendentes</CardTitle>
+            <CardTitle className="text-xl font-semibold">{t('dashboard.pendingVotes')}</CardTitle>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/votacoes" data-testid="link-ver-todas-votacoes">
                 <span className="flex items-center gap-1">
-                  Ver todas <ArrowRight className="h-4 w-4" />
+                  {t('dashboard.viewAll')} <ArrowRight className="h-4 w-4" />
                 </span>
               </Link>
             </Button>
@@ -119,14 +131,14 @@ export default function Dashboard() {
           <CardContent>
             {isLoading ? (
               <LoadingList />
-            ) : summary?.votingItems?.length > 0 ? (
+            ) : summary?.votingItems && summary.votingItems.length > 0 ? (
               <div className="space-y-4">
                 {summary.votingItems.map((item: VotingItem) => (
                   <VotingItemCard key={item.id} item={item} />
                 ))}
               </div>
             ) : (
-              <EmptyState message="Nenhuma votação pendente no momento" />
+              <EmptyState message={t('dashboard.noVotes')} />
             )}
           </CardContent>
         </Card>
@@ -135,11 +147,11 @@ export default function Dashboard() {
       {/* Documentos Recentes */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-          <CardTitle className="text-xl font-semibold">Documentos Recentes</CardTitle>
+          <CardTitle className="text-xl font-semibold">{t('dashboard.recentDocuments')}</CardTitle>
           <Button variant="ghost" size="sm" asChild>
             <Link href="/documentos" data-testid="link-ver-todos-documentos">
               <span className="flex items-center gap-1">
-                Ver todos <ArrowRight className="h-4 w-4" />
+                {t('dashboard.viewAll')} <ArrowRight className="h-4 w-4" />
               </span>
             </Link>
           </Button>
@@ -147,14 +159,14 @@ export default function Dashboard() {
         <CardContent>
           {isLoading ? (
             <LoadingList />
-          ) : summary?.documents?.length > 0 ? (
+          ) : summary?.documents && summary.documents.length > 0 ? (
             <div className="space-y-3">
               {summary.documents.map((doc: Doc) => (
                 <DocumentItem key={doc.id} document={doc} />
               ))}
             </div>
           ) : (
-            <EmptyState message="Nenhum documento disponível" />
+            <EmptyState message={t('dashboard.noDocuments')} />
           )}
         </CardContent>
       </Card>
@@ -193,14 +205,18 @@ function StatCard({ title, value, icon: Icon, color }: {
 }
 
 function AssemblyItem({ assembly }: { assembly: Assembly }) {
-  const getStatusBadge = (status: string) => {
-    const variants = {
+  const { t, i18n } = useTranslation();
+  
+  const getStatusBadge = (status: string): "default" | "secondary" | "outline" => {
+    const variants: Record<string, "default" | "secondary" | "outline"> = {
       agendada: "default",
       em_curso: "secondary",
       encerrada: "outline",
     };
-    return variants[status as keyof typeof variants] || "default";
+    return variants[status] || "default";
   };
+
+  const locale = i18n.language === 'en' ? 'en-US' : 'pt-PT';
 
   return (
     <div className="flex items-start gap-3 p-3 rounded-md hover-elevate active-elevate-2">
@@ -209,11 +225,11 @@ function AssemblyItem({ assembly }: { assembly: Assembly }) {
         <div className="flex items-start justify-between gap-2 mb-1">
           <h4 className="font-medium text-foreground truncate">{assembly.titulo}</h4>
           <Badge variant={getStatusBadge(assembly.status!)} className="flex-shrink-0">
-            {assembly.status}
+            {t(`dashboard.status.${assembly.status}`)}
           </Badge>
         </div>
         <div className="text-sm text-muted-foreground">
-          {new Date(assembly.dataAssembleia).toLocaleDateString('pt-PT', {
+          {new Date(assembly.dataAssembleia).toLocaleDateString(locale, {
             day: 'numeric',
             month: 'long',
             year: 'numeric',
@@ -227,12 +243,14 @@ function AssemblyItem({ assembly }: { assembly: Assembly }) {
 }
 
 function VotingItemCard({ item }: { item: VotingItem }) {
+  const { t } = useTranslation();
+  
   return (
     <div className="p-3 rounded-md hover-elevate active-elevate-2">
       <div className="flex items-start justify-between gap-2 mb-2">
         <h4 className="font-medium text-foreground">{item.titulo}</h4>
         <Badge variant="secondary" className="flex-shrink-0">
-          {item.status}
+          {t(`dashboard.status.${item.status}`)}
         </Badge>
       </div>
       <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
@@ -240,7 +258,8 @@ function VotingItemCard({ item }: { item: VotingItem }) {
       </p>
       <Button size="sm" asChild data-testid={`button-votar-${item.id}`}>
         <Link href={`/votacoes/${item.id}`}>
-          <a>Votar Agora</a>
+          <Vote className="mr-2 h-4 w-4" />
+          {t('dashboard.voteNow')}
         </Link>
       </Button>
     </div>
@@ -248,13 +267,16 @@ function VotingItemCard({ item }: { item: VotingItem }) {
 }
 
 function DocumentItem({ document }: { document: Doc }) {
+  const { i18n } = useTranslation();
+  const locale = i18n.language === 'en' ? 'en-US' : 'pt-PT';
+  
   return (
     <div className="flex items-center gap-3 p-2 rounded-md hover-elevate active-elevate-2">
       <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
       <div className="flex-1 min-w-0">
         <div className="font-medium text-foreground truncate">{document.titulo}</div>
         <div className="text-sm text-muted-foreground">
-          {new Date(document.createdAt!).toLocaleDateString('pt-PT')}
+          {new Date(document.createdAt!).toLocaleDateString(locale)}
         </div>
       </div>
       <Badge variant="outline">{document.tipo}</Badge>

@@ -1,6 +1,101 @@
 # 🛠️ Comandos - Bureau Social
 
-Comandos necessários para executar as 10 tarefas prioritárias do projeto.
+Comandos necessários para executar as tarefas prioritárias do projeto.
+
+---
+
+## 🌍 Sistema Bilíngue (i18n)
+
+### Como Funciona
+
+O sistema usa **react-i18next** para suportar **Português (PT)** e **Inglês (EN)**:
+
+1. **Idioma padrão**: Português (pt)
+2. **Persistência**: localStorage (chave 'language')
+3. **Toggle**: Componente LanguageToggle no header (sem emojis)
+4. **Traduções**: Ficheiro `client/src/i18n.ts`
+
+### Chaves de Tradução Disponíveis
+
+```typescript
+// Dashboard
+t('dashboard.welcome', { name: 'João' })        // "Bem-vindo, João!" / "Welcome, João!"
+t('dashboard.summary')                          // Resumo da atividade
+t('dashboard.upcomingAssemblies')              // "Próximas Assembleias" / "Upcoming Assemblies"
+t('dashboard.pendingVotes')                    // "Votações Pendentes" / "Pending Votes"
+t('dashboard.recentDocuments')                 // "Documentos Recentes" / "Recent Documents"
+t('dashboard.notifications')                   // "Notificações" / "Notifications"
+t('dashboard.viewAll')                         // "Ver todas" / "View all"
+t('dashboard.voteNow')                         // "Votar Agora" / "Vote Now"
+
+// Status badges traduzidos
+t('dashboard.status.agendada')                 // "Agendada" / "Scheduled"
+t('dashboard.status.em_curso')                 // "Em Curso" / "In Progress"
+t('dashboard.status.encerrada')                // "Encerrada" / "Closed"
+t('dashboard.status.aberta')                   // "Aberta" / "Open"
+t('dashboard.status.fechada')                  // "Fechada" / "Closed"
+
+// Mensagens vazias
+t('dashboard.noAssemblies')                    // "Nenhuma assembleia agendada no momento"
+t('dashboard.noVotes')                         // "Nenhuma votação pendente no momento"
+t('dashboard.noDocuments')                     // "Nenhum documento recente"
+```
+
+### Como Adicionar Novas Traduções
+
+Editar `client/src/i18n.ts`:
+
+```typescript
+// Português
+pt: {
+  translation: {
+    minhaChave: "Meu texto em português",
+    outraChave: "Outro texto com {{variavel}}"
+  }
+}
+
+// Inglês
+en: {
+  translation: {
+    minhaChave: "My text in English",
+    outraChave: "Another text with {{variavel}}"
+  }
+}
+```
+
+### Formatação de Datas com i18n
+
+```typescript
+import { useTranslation } from 'react-i18next';
+
+function MeuComponente() {
+  const { i18n } = useTranslation();
+  const locale = i18n.language === 'en' ? 'en-US' : 'pt-PT';
+  
+  return (
+    <div>
+      {new Date().toLocaleDateString(locale, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })}
+    </div>
+  );
+}
+```
+
+### Testar Traduções
+
+```bash
+# 1. Iniciar aplicação
+npm run dev
+
+# 2. Abrir navegador: http://localhost:5000
+# 3. Clicar no toggle de idioma no header (PT/EN)
+# 4. Verificar que textos mudam imediatamente
+# 5. Recarregar página (F5) - idioma deve persistir
+# 6. Verificar localStorage no DevTools: key 'language'
+```
 
 ---
 
@@ -102,6 +197,7 @@ psql $DATABASE_URL -c "UPDATE users SET is_admin = false, is_direcao = false WHE
 psql $DATABASE_URL -c "SELECT email, first_name, is_admin, is_direcao FROM users WHERE is_admin = true;"
 
 # Exemplos na BD atual:
+# - dmrdiego@gmail.com (Admin + Direção)
 # - admin2@bureausocial.pt (Admin + Direção)
 # - admin3@bureausocial.pt (Admin + Direção)
 # - user1@bureausocial.pt (Utilizador normal)
@@ -119,6 +215,7 @@ test -n "$SESSION_SECRET" && echo "✓ SESSION_SECRET configurado" || echo "✗ 
 test -n "$REPL_ID" && echo "✓ REPL_ID configurado" || echo "✗ REPL_ID ausente"
 test -n "$REPL_SLUG" && echo "✓ REPL_SLUG configurado" || echo "✗ REPL_SLUG ausente"
 test -n "$REPL_OWNER" && echo "✓ REPL_OWNER configurado" || echo "✗ REPL_OWNER ausente"
+test -n "$RESEND_API_KEY" && echo "✓ RESEND_API_KEY configurado" || echo "✗ RESEND_API_KEY ausente"
 ```
 
 ### Deploy/Publish
@@ -194,10 +291,10 @@ export const proxies = pgTable("proxies", {
   giverId: varchar("giver_id").notNull().references(() => users.id),
   receiverId: varchar("receiver_id").notNull().references(() => users.id),
   assemblyId: integer("assembly_id").notNull().references(() => assemblies.id),
+  status: varchar("status", { length: 20 }).default('active'),
   createdAt: timestamp("created_at").defaultNow(),
   revokedAt: timestamp("revoked_at"),
 });
-// Adicionar unique constraint via Drizzle ou manualmente depois
 ```
 
 ### Testar Procurações
@@ -219,7 +316,31 @@ curl http://localhost:5000/api/assemblies/1/my-proxies \
 
 ---
 
-## 5️⃣ Votação Secreta
+## 5️⃣ Notificações por Email (Resend)
+
+### Configurar API Key
+```bash
+# Já configurado: RESEND_API_KEY no Replit Secrets
+# Verificar:
+test -n "$RESEND_API_KEY" && echo "✓ RESEND_API_KEY configurado" || echo "✗ RESEND_API_KEY ausente"
+```
+
+### Templates de Email Disponíveis
+
+O sistema envia emails automaticamente para:
+- **Nova assembleia criada** (todos os membros ativos)
+- **Ata disponível** (participantes da assembleia)
+- **Procuração recebida** (destinatário da procuração)
+- **Novo documento adicionado** (todos os membros ativos)
+
+```bash
+# Ver emails enviados (logs do servidor)
+# Os emails são enviados de forma assíncrona (não bloqueiam requests)
+```
+
+---
+
+## 6️⃣ Votação Secreta
 
 ### Instalar Biblioteca de Criptografia (se necessário)
 ```bash
@@ -249,7 +370,7 @@ curl -X POST http://localhost:5000/api/voting-items \
 
 ---
 
-## 6️⃣ Sistema de Quotas
+## 7️⃣ Sistema de Quotas
 
 ### Criar Tabela de Quotas
 ```bash
@@ -264,13 +385,12 @@ export const quotas = pgTable("quotas", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   userId: varchar("user_id").notNull().references(() => users.id),
   year: integer("year").notNull(),
-  amount: varchar("amount", { length: 20 }).notNull(), // ou numeric se suportado
+  amount: varchar("amount", { length: 20 }).notNull(),
   status: varchar("status", { length: 20 }).default('pendente'),
   paidAt: timestamp("paid_at"),
   paymentMethod: varchar("payment_method", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
-// Adicionar unique constraint via Drizzle ou manualmente depois
 ```
 
 ### Seed de Quotas Iniciais
@@ -283,52 +403,6 @@ SELECT id, 2025, '50.00', 'pendente'
 FROM users
 WHERE ativo = true
 ON CONFLICT DO NOTHING;
-"
-```
-
----
-
-## 7️⃣ Notificações por Email
-
-### Instalar SendGrid ou Nodemailer
-```bash
-# Opção 1: SendGrid
-npm install @sendgrid/mail
-
-# Opção 2: Nodemailer (mais flexível)
-npm install nodemailer @types/nodemailer
-```
-
-### Configurar Variável de Ambiente
-```bash
-# Adicionar no Replit Secrets:
-# SENDGRID_API_KEY=seu_api_key_aqui
-# ou
-# SMTP_HOST=smtp.gmail.com
-# SMTP_PORT=587
-# SMTP_USER=seu_email@gmail.com
-# SMTP_PASS=sua_senha_app
-```
-
-### Testar Envio de Email
-```bash
-# Criar script de teste
-node -e "
-const nodemailer = require('nodemailer');
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
-});
-transporter.sendMail({
-  from: process.env.SMTP_USER,
-  to: 'teste@example.com',
-  subject: 'Teste Bureau Social',
-  text: 'Email de teste'
-}).then(console.log).catch(console.error);
 "
 ```
 
@@ -385,26 +459,6 @@ psql $DATABASE_URL -c "CREATE INDEX idx_votes_user ON votes(user_id);"
 
 ---
 
-## 🔟 Documentação de API
-
-### Instalar Swagger
-```bash
-# Swagger UI Express para documentação automática
-npm install swagger-ui-express swagger-jsdoc
-npm install @types/swagger-ui-express @types/swagger-jsdoc --save-dev
-```
-
-### Gerar Documentação
-```bash
-# A documentação estará disponível em:
-# http://localhost:5000/api-docs
-
-# Após deploy:
-# https://<seu-projeto>.replit.app/api-docs
-```
-
----
-
 ## 🔧 Comandos Úteis Gerais
 
 ### Desenvolvimento
@@ -457,6 +511,10 @@ curl http://localhost:5000/api/assemblies
 
 # CMS público
 curl http://localhost:5000/api/public/cms/hero
+
+# Dashboard summary
+curl http://localhost:5000/api/dashboard/summary \
+  -b "session_cookie_here"
 ```
 
 ---
@@ -471,6 +529,7 @@ Antes de fazer deploy para produção:
 - [ ] ✅ Frontend buildado sem erros
 - [ ] ✅ Testes E2E passando
 - [ ] ✅ SESSION_SECRET configurado (aleatório e seguro)
+- [ ] ✅ RESEND_API_KEY configurado
 - [ ] ✅ Verificar .gitignore (não commitar secrets)
 
 ### Comando Final de Verificação
@@ -481,4 +540,4 @@ npm run build && echo "✅ Build OK" || echo "❌ Build FAIL"
 
 ---
 
-**Última atualização**: 12 de Outubro de 2025, 02:03
+**Última atualização**: 22 de Outubro de 2025, 22:35
