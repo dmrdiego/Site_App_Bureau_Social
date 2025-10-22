@@ -51,6 +51,7 @@ export const users = pgTable("users", {
   ativo: boolean("ativo").default(true),
   isAdmin: boolean("is_admin").default(false),
   isDirecao: boolean("is_direcao").default(false),
+  emailPreferences: jsonb("email_preferences").default(sql`'{"assemblies":true,"votes":true,"documents":true,"quotas":true}'::jsonb`),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
