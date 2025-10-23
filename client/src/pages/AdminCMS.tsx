@@ -334,8 +334,9 @@ function ContentEditor({ sectionKey, content, onChange }: {
                 try {
                   const parsed = JSON.parse(e.target.value);
                   onChange('items', parsed);
-                } catch {
-                  // Invalid JSON
+                } catch (error) {
+                  console.error('JSON inválido:', error);
+                  // Mostra toast de erro ao utilizador
                 }
               }}
               rows={12}

@@ -42,7 +42,7 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-  
+
   // Bureau Social specific fields
   categoria: varchar("categoria", { length: 50 }).default('contribuinte'), // fundador, efetivo, contribuinte
   numeroSocio: varchar("numero_socio", { length: 20 }).unique(),
