@@ -20,6 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 
 export default function Comunicacoes() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading, isAdmin } = useAuth();
   const [subject, setSubject] = useState("");
@@ -212,9 +213,9 @@ export default function Comunicacoes() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Comunicações</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2">{t('admin.communications.title')}</h1>
         <p className="text-muted-foreground">
-          Envie emails em massa para os associados
+          {t('admin.communications.subtitle')}
         </p>
       </div>
 

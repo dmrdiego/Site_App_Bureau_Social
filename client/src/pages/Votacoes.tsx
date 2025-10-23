@@ -77,6 +77,7 @@ function VotingButtons({ votingItemId }: { votingItemId: number }) {
 }
 
 export default function Votacoes() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
@@ -109,9 +110,9 @@ export default function Votacoes() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Votações</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2">{t('votes.title')}</h1>
         <p className="text-muted-foreground">
-          Participe nas votações abertas e consulte resultados passados
+          {t('votes.subtitle')}
         </p>
       </div>
 

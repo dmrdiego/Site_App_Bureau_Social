@@ -246,8 +246,8 @@ const resources = {
         voteAgainst: 'Contra',
         abstain: 'Abstenção'
       },
-      // Documentos
-      documents: {
+      // Repositório de Documentos
+      repository: {
         title: 'Documentos',
         subtitle: 'Acesse documentos institucionais e atas',
         category: 'Categoria',
@@ -548,8 +548,8 @@ const resources = {
         voteAgainst: 'Against',
         abstain: 'Abstain'
       },
-      // Documentos
-      documents: {
+      // Repository
+      repository: {
         title: 'Documents',
         subtitle: 'Access institutional documents and minutes',
         category: 'Category',

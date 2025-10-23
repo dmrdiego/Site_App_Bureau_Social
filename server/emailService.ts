@@ -2,7 +2,10 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = 'onboarding@resend.dev';
+// Use o email verificado na sua conta Resend
+// Para desenvolvimento: onboarding@resend.dev (limitado)
+// Para produção: configure seu domínio no Resend ou use o email verificado
+const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 
 interface EmailTemplate {
   to: string;
@@ -12,6 +15,16 @@ interface EmailTemplate {
 
 export async function sendEmail({ to, subject, html }: EmailTemplate) {
   try {
+    // Validar configuração
+    if (!process.env.RESEND_API_KEY) {
+      console.error('❌ RESEND_API_KEY não configurada');
+      throw new Error('RESEND_API_KEY not configured');
+    }
+
+    console.log(`📧 Tentando enviar email para: ${to}`);
+    console.log(`   Assunto: ${subject}`);
+    console.log(`   From: ${FROM_EMAIL}`);
+
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to,
@@ -20,14 +33,14 @@ export async function sendEmail({ to, subject, html }: EmailTemplate) {
     });
 
     if (error) {
-      console.error('Erro ao enviar email:', error);
+      console.error('❌ Erro ao enviar email:', error);
       throw error;
     }
 
-    console.log(`Email enviado com sucesso: ${data?.id}`);
+    console.log(`✅ Email enviado com sucesso para ${to} (ID: ${data?.id})`);
     return data;
-  } catch (err) {
-    console.error('Falha ao enviar email:', err);
+  } catch (err: any) {
+    console.error(`❌ Falha ao enviar email para ${to}:`, err.message || err);
     throw err;
   }
 }

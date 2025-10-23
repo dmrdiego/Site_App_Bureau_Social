@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,6 +38,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Document as Doc } from "@shared/schema";
 
 export default function Documentos() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading, isAdmin, isDirecao } = useAuth();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -89,9 +91,9 @@ export default function Documentos() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Documentos</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">{t('repository.title')}</h1>
           <p className="text-muted-foreground">
-            Aceda a atas, regulamentos e outros documentos importantes
+            {t('repository.subtitle')}
           </p>
         </div>
         {canManage && (

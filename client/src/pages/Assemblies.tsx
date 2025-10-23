@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Assemblies() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading, isAdmin, isDirecao } = useAuth();
 
@@ -45,9 +46,9 @@ export default function Assemblies() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Assembleias</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">{t('assemblies.title')}</h1>
           <p className="text-muted-foreground">
-            Consulte as assembleias agendadas e passadas
+            {t('assemblies.subtitle')}
           </p>
         </div>
         {canCreate && (
