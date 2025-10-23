@@ -97,8 +97,8 @@ export const insertAssemblySchema = createInsertSchema(assemblies).omit({
   dataAssembleia: z.union([z.string(), z.date()]).transform((val) => 
     typeof val === 'string' ? new Date(val) : val
   ),
-  votingEligibility: z.enum(['todos', 'fundador_efetivo', 'apenas_fundador']).optional(),
-  allowedCategories: z.array(z.enum(['fundador', 'efetivo', 'contribuinte', 'honorario'])).optional(),
+  votingEligibility: z.enum(['todos', 'com_contribuintes', 'com_voluntarios', 'completa', 'apenas_fundador']).optional(),
+  allowedCategories: z.array(z.enum(['fundador', 'efetivo', 'contribuinte', 'voluntario', 'honorario'])).optional(),
 });
 export const selectAssemblySchema = createSelectSchema(assemblies);
 

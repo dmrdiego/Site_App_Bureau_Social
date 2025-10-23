@@ -96,9 +96,6 @@ export interface IStorage {
   getProxiesReceivedByUser(assemblyId: number, receiverId: string): Promise<Proxy[]>;
   revokeProxy(id: number): Promise<Proxy | undefined>;
   checkProxyLoop(assemblyId: number, giverId: string, receiverId: string): Promise<boolean>;
-
-  // Voting Eligibility
-  canUserVoteInAssembly(assemblyId: number, userId: string): Promise<{ canVote: boolean; reason?: string }>;
 }
 
 export class DbStorage implements IStorage {
@@ -114,7 +111,7 @@ export class DbStorage implements IStorage {
   }
 
   async upsertUser(user: UpsertUser): Promise<User> {
-    const existing = user.id ? await this.getUser(user.id) : 
+    const existing = user.id ? await this.getUser(user.id) :
                      user.email ? await this.getUserByEmail(user.email) : undefined;
 
     if (existing) {
@@ -260,7 +257,17 @@ export class DbStorage implements IStorage {
     // Verificar elegibilidade específica da assembleia
     const allowedCategories = (assembly.allowedCategories as string[]) || ['fundador', 'efetivo', 'contribuinte'];
 
-    if (!allowedCategories.includes(user.categoria || 'contribuinte')) {
+    // Contribuintes e Voluntários só votam se convocados
+    if (user.categoria === 'contribuinte' || user.categoria === 'voluntario') {
+      if (!allowedCategories.includes(user.categoria)) {
+        return {
+          canVote: false,
+          reason: `${user.categoria === 'contribuinte' ? 'Contribuintes' : 'Voluntários'} só podem votar quando convocados especificamente`
+        };
+      }
+    }
+
+    if (!allowedCategories.includes(user.categoria || '')) {
       return { canVote: false, reason: `Esta assembleia é restrita a: ${allowedCategories.join(', ')}` };
     }
 

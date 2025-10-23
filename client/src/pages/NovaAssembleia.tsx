@@ -265,8 +265,10 @@ export default function NovaAssembleia() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="todos">Todos os associados ativos (exceto honorários)</SelectItem>
-                        <SelectItem value="fundador_efetivo">Apenas Fundadores e Efetivos</SelectItem>
+                        <SelectItem value="todos">Fundadores e Efetivos (sempre votam)</SelectItem>
+                        <SelectItem value="com_contribuintes">Fundadores, Efetivos e Contribuintes</SelectItem>
+                        <SelectItem value="com_voluntarios">Fundadores, Efetivos e Voluntários</SelectItem>
+                        <SelectItem value="completa">Todos (Fundadores, Efetivos, Contribuintes e Voluntários)</SelectItem>
                         <SelectItem value="apenas_fundador">Apenas Fundadores</SelectItem>
                       </SelectContent>
                     </Select>

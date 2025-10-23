@@ -344,9 +344,13 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
               <Badge variant="outline">
                 {getTypeLabel(assembly.tipo)}
               </Badge>
-              {(assembly as any).votingEligibility && (assembly as any).votingEligibility !== 'todos' && (
+              {(assembly as any).votingEligibility && (
                 <Badge variant="secondary">
-                  {(assembly as any).votingEligibility === 'fundador_efetivo' ? 'Voto: Fundadores e Efetivos' : 'Voto: Apenas Fundadores'}
+                  {(assembly as any).votingEligibility === 'todos' ? 'Voto: Fundadores e Efetivos' :
+                   (assembly as any).votingEligibility === 'com_contribuintes' ? 'Voto: Fund., Efet. e Contrib.' :
+                   (assembly as any).votingEligibility === 'com_voluntarios' ? 'Voto: Fund., Efet. e Volunt.' :
+                   (assembly as any).votingEligibility === 'completa' ? 'Voto: Todos (exceto Honorários)' :
+                   'Voto: Apenas Fundadores'}
                 </Badge>
               )}
               {myProxies?.given && (
