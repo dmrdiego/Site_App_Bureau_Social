@@ -1,13 +1,13 @@
-
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import { PublicNav } from "@/components/PublicNav";
 import { Footer } from "@/components/landing/Footer";
 import { Send } from "lucide-react";
@@ -25,13 +25,13 @@ export default function FormularioInscricao() {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/public/inscricao', {
+      const response = await apiRequest('/api/public/inscricao', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      if (!res.ok) throw new Error('Erro ao submeter inscrição');
-      return res.json();
+      if (!response.ok) throw new Error('Erro ao submeter inscrição');
+      return response.json();
     },
     onSuccess: () => {
       toast({

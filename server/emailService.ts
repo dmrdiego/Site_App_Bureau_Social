@@ -3,7 +3,8 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Domínio verificado no Resend: bureausocial.com.br
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@bureausocial.com.br';
+// Use o formato: "Nome <email@dominio.com>"
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Bureau Social <noreply@bureausocial.com.br>';
 
 interface EmailTemplate {
   to: string;

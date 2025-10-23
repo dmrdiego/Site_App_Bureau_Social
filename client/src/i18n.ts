@@ -166,7 +166,7 @@ const resources = {
           message: 'Mensagem Adicional',
           attachment: 'Anexar Arquivo (opcional)',
           chooseFile: 'Escolher Arquivo',
-          formats: 'Formatos aceitos: PDF, Word, Imagens, ZIP (máx. 10MB)',
+          formats: 'Formatos aceitos: PDF, Word, Images, ZIP (máx. 10MB)',
           submit: 'Enviar Mensagem',
           sending: 'Enviando...',
           success: 'Mensagem enviada com sucesso! Entraremos em contato em breve.',
@@ -292,7 +292,7 @@ const resources = {
         },
         communications: {
           title: 'Comunicações',
-          subtitle: 'Envie emails em massa para os associados',
+          subtitle: 'Enviar emails para associados',
           newMessage: 'Nova Mensagem',
           subject: 'Assunto',
           message: 'Mensagem',
@@ -620,4 +620,3 @@ i18n
   })
 
 export default i18n
-

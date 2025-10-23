@@ -138,6 +138,12 @@ export class DbStorage implements IStorage {
     return await db.select().from(users);
   }
 
+  async getAdmins(): Promise<User[]> {
+    return await db.select()
+      .from(users)
+      .where(eq(users.isAdmin, true));
+  }
+
   // Assemblies
   async getAllAssemblies(): Promise<Assembly[]> {
     return await db.select().from(assemblies).orderBy(desc(assemblies.dataAssembleia));
