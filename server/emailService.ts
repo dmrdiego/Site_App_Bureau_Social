@@ -2,10 +2,8 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Use o email verificado na sua conta Resend
-// Para desenvolvimento: onboarding@resend.dev (limitado)
-// Para produção: configure seu domínio no Resend ou use o email verificado
-const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+// Domínio verificado no Resend: bureausocial.com.br
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@bureausocial.com.br';
 
 interface EmailTemplate {
   to: string;
