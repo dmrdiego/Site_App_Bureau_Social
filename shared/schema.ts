@@ -80,6 +80,9 @@ export const assemblies = pgTable("assemblies", {
   quorumMinimo: integer("quorum_minimo").default(50), // percentage
   ataGerada: boolean("ata_gerada").default(false),
   ataPath: varchar("ata_path", { length: 500 }),
+  // Controle de elegibilidade para voto
+  votingEligibility: varchar("voting_eligibility", { length: 20 }).default('todos'), // todos, fundador_efetivo, apenas_fundador
+  allowedCategories: jsonb("allowed_categories").default(sql`'["fundador","efetivo","contribuinte"]'::jsonb`), // Array de categorias permitidas
   createdBy: varchar("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -94,6 +97,8 @@ export const insertAssemblySchema = createInsertSchema(assemblies).omit({
   dataAssembleia: z.union([z.string(), z.date()]).transform((val) => 
     typeof val === 'string' ? new Date(val) : val
   ),
+  votingEligibility: z.enum(['todos', 'fundador_efetivo', 'apenas_fundador']).optional(),
+  allowedCategories: z.array(z.enum(['fundador', 'efetivo', 'contribuinte', 'honorario'])).optional(),
 });
 export const selectAssemblySchema = createSelectSchema(assemblies);
 

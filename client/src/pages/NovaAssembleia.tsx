@@ -39,6 +39,8 @@ const formSchema = z.object({
   ordemDia: z.any().optional(),
   status: z.string().optional(),
   quorumMinimo: z.number().min(1).max(100).optional(),
+  votingEligibility: z.enum(["todos", "fundador_efetivo", "apenas_fundador"]).optional(),
+  allowedCategories: z.array(z.enum(["fundador", "efetivo", "contribuinte", "honorario"])).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -72,6 +74,8 @@ export default function NovaAssembleia() {
       ordemDia: [],
       status: "agendada",
       quorumMinimo: 50,
+      votingEligibility: "todos",
+      allowedCategories: ["fundador", "efetivo", "contribuinte"],
     },
   });
 
@@ -240,6 +244,32 @@ export default function NovaAssembleia() {
                         data-testid="input-convocatoria"
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="votingEligibility"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Elegibilidade para Voto</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger data-testid="select-voting-eligibility">
+                          <SelectValue placeholder="Quem pode votar?" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="todos">Todos os associados ativos (exceto honorários)</SelectItem>
+                        <SelectItem value="fundador_efetivo">Apenas Fundadores e Efetivos</SelectItem>
+                        <SelectItem value="apenas_fundador">Apenas Fundadores</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

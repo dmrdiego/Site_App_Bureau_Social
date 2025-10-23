@@ -427,13 +427,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user already voted
       const existingVote = await storage.getUserVote(data.votingItemId!, userId);
       if (existingVote) {
-        return res.status(400).json({ message: "You have already voted on this item" });
+        return res.status(400).json({ message: "Já votou neste item" });
       }
 
       // Get voting item to find assembly ID
       const votingItem = await storage.getVotingItemById(data.votingItemId!);
       if (!votingItem) {
-        return res.status(404).json({ message: "Voting item not found" });
+        return res.status(404).json({ message: "Item de votação não encontrado" });
+      }
+
+      // Check voting eligibility based on assembly configuration
+      const eligibility = await storage.canUserVoteInAssembly(votingItem.assemblyId!, userId);
+      if (!eligibility.canVote) {
+        return res.status(403).json({ message: eligibility.reason });
       }
 
       // Check if user has delegated their vote via proxy

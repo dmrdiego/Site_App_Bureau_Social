@@ -344,6 +344,11 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
               <Badge variant="outline">
                 {getTypeLabel(assembly.tipo)}
               </Badge>
+              {(assembly as any).votingEligibility && (assembly as any).votingEligibility !== 'todos' && (
+                <Badge variant="secondary">
+                  {(assembly as any).votingEligibility === 'fundador_efetivo' ? 'Voto: Fundadores e Efetivos' : 'Voto: Apenas Fundadores'}
+                </Badge>
+              )}
               {myProxies?.given && (
                 <Badge variant="secondary" data-testid={`badge-procuracao-dada-${assembly.id}`}>
                   <UserCheck className="h-3 w-3 mr-1" />

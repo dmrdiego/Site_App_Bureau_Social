@@ -59,7 +59,7 @@ export interface IStorage {
 
   // Votes
   createVote(vote: InsertVote): Promise<Vote>;
-  getUserVote(votingItemId: number, userId: string): Promise<Vote | undefined>;
+  getUserVote(votingItemId: number, userId: string): Promise<Vote | null>;
   getVotesByVotingItem(votingItemId: number): Promise<Vote[]>;
 
   // Documents
@@ -68,6 +68,8 @@ export interface IStorage {
   createDocument(document: InsertDocument): Promise<Document>;
   getDocumentsByType(type: string): Promise<Document[]>;
   getDocumentsByAssembly(assemblyId: number): Promise<Document[]>;
+  updateDocument(id: number, data: Partial<Document>): Promise<Document | undefined>;
+  deleteDocument(id: number): Promise<void>;
 
   // Presences
   createPresence(presence: InsertPresence): Promise<Presence>;
@@ -94,6 +96,9 @@ export interface IStorage {
   getProxiesReceivedByUser(assemblyId: number, receiverId: string): Promise<Proxy[]>;
   revokeProxy(id: number): Promise<Proxy | undefined>;
   checkProxyLoop(assemblyId: number, giverId: string, receiverId: string): Promise<boolean>;
+
+  // Voting Eligibility
+  canUserVoteInAssembly(assemblyId: number, userId: string): Promise<{ canVote: boolean; reason?: string }>;
 }
 
 export class DbStorage implements IStorage {
@@ -224,13 +229,42 @@ export class DbStorage implements IStorage {
     return inserted[0];
   }
 
-  async getUserVote(votingItemId: number, userId: string): Promise<Vote | undefined> {
-    const result = await db
+  async getUserVote(votingItemId: number, userId: string): Promise<Vote | null> {
+    const [vote] = await db
       .select()
       .from(votes)
-      .where(and(eq(votes.votingItemId, votingItemId), eq(votes.userId, userId)))
-      .limit(1);
-    return result[0];
+      .where(and(eq(votes.votingItemId, votingItemId), eq(votes.userId, userId)));
+    return vote || null;
+  }
+
+  async canUserVoteInAssembly(assemblyId: number, userId: string): Promise<{ canVote: boolean; reason?: string }> {
+    const assembly = await this.getAssemblyById(assemblyId);
+    if (!assembly) {
+      return { canVote: false, reason: 'Assembleia não encontrada' };
+    }
+
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { canVote: false, reason: 'Utilizador não encontrado' };
+    }
+
+    if (!user.ativo) {
+      return { canVote: false, reason: 'Utilizador inativo' };
+    }
+
+    // Categoria honorário nunca vota (segundo estatuto)
+    if (user.categoria === 'honorario') {
+      return { canVote: false, reason: 'Associados honorários não têm direito a voto' };
+    }
+
+    // Verificar elegibilidade específica da assembleia
+    const allowedCategories = (assembly.allowedCategories as string[]) || ['fundador', 'efetivo', 'contribuinte'];
+
+    if (!allowedCategories.includes(user.categoria || 'contribuinte')) {
+      return { canVote: false, reason: `Esta assembleia é restrita a: ${allowedCategories.join(', ')}` };
+    }
+
+    return { canVote: true };
   }
 
   async getVotesByVotingItem(votingItemId: number): Promise<Vote[]> {
@@ -375,7 +409,7 @@ export class DbStorage implements IStorage {
         .where(eq(proxies.assemblyId, assemblyId))
         .orderBy(desc(proxies.createdAt));
     }
-    
+
     // Return only active proxies
     return await db
       .select()
