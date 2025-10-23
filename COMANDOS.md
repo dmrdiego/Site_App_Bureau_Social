@@ -39,6 +39,34 @@ t('dashboard.status.fechada')                  // "Fechada" / "Closed"
 t('dashboard.noAssemblies')                    // "Nenhuma assembleia agendada no momento"
 t('dashboard.noVotes')                         // "Nenhuma votação pendente no momento"
 t('dashboard.noDocuments')                     // "Nenhum documento recente"
+
+// Assembleias (✅ 100% traduzido)
+t('assemblies.pageTitle')                      // "Assembleias Gerais" / "General Assemblies"
+t('assemblies.subtitle')                       // "Ver assembleias agendadas e passadas" / "View scheduled and past assemblies"
+t('assemblies.button')                         // "Nova Assembleia" / "New Assembly"
+t('assemblies.noAssemblies')                   // "Nenhuma assembleia agendada no momento" / "No scheduled assemblies at the moment"
+t('assemblies.searchPlaceholder')              // "Pesquisar assembleias..." / "Search assemblies..."
+t('assemblies.dateTime')                       // "Data e Hora" / "Date and Time"
+t('assemblies.location')                       // "Local" / "Location"
+t('assemblies.minQuorum')                      // "Quórum Mínimo" / "Minimum Quorum"
+t('assemblies.minutes')                        // "Ata" / "Minutes"
+t('assemblies.participants')                   // "participantes" / "participants"
+t('assemblies.votingItems')                    // "itens de votação" / "voting items"
+t('assemblies.proxy')                          // "Procuração" / "Proxy"
+t('assemblies.status.agendada')                // "Agendada" / "Scheduled"
+t('assemblies.status.em_curso')                // "Em Curso" / "In Progress"
+t('assemblies.status.encerrada')               // "Encerrada" / "Closed"
+t('assemblies.viewAssembly')                   // "Ver Assembleia" / "View Assembly"
+t('assemblies.viewMinutes')                    // "Ver Ata" / "View Minutes"
+t('assemblies.generateMinutes')                // "Gerar Ata" / "Generate Minutes"
+t('assemblies.delegateVote')                   // "Delegar Voto" / "Delegate Vote"
+t('assemblies.selectReceiver')                 // "Selecionar destinatário" / "Select receiver"
+t('assemblies.revoke')                         // "Revogar" / "Revoke"
+t('assemblies.toast.proxyCreated')             // "Procuração criada com sucesso" / "Proxy created successfully"
+t('assemblies.toast.proxyRevoked')             // "Procuração revogada" / "Proxy revoked"
+t('assemblies.toast.minutesGenerated')         // "Ata gerada com sucesso" / "Minutes generated successfully"
+t('assemblies.form.title')                     // "Título" / "Title"
+t('assemblies.form.titlePlaceholder')          // "Assembleia Geral de..." / "General Assembly of..."
 ```
 
 ### Como Adicionar Novas Traduções
@@ -540,4 +568,8 @@ npm run build && echo "✅ Build OK" || echo "❌ Build FAIL"
 
 ---
 
-**Última atualização**: 22 de Outubro de 2025, 22:35
+**Última atualização**: 23 de Outubro de 2025, 15:00  
+**Notas da última atualização**:
+- ✅ Adicionadas 25+ chaves de tradução para página Assembleias (/assembleias)
+- ✅ Sistema i18n agora 100% funcional em Dashboard e Assembleias
+- ✅ Próximas páginas a traduzir: Documentos, Perfil, Votos, Admin Users

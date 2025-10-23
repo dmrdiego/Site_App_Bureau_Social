@@ -1,6 +1,98 @@
 # 📊 Bureau Social - Status do Projeto
 
-**Última atualização**: 22 de Outubro de 2025, 23:45
+**Última atualização**: 23 de Outubro de 2025, 15:00
+
+---
+
+## ✅ Correções Finais de Deploy - 23/10/2025 (CONCLUÍDO)
+
+**Status**: 🟢 Done  
+**Data de Conclusão**: 23 de Outubro de 2025, 15:00 ✓
+
+### 🔧 Problemas Identificados e Corrigidos
+
+**1. Bug Crítico: upsertUser duplicate key error**
+- **Sintoma**: Servidor crashava ao tentar login OIDC quando email já existia mas ID (sub) era novo
+- **Causa Raiz**: Lógica ternária verificava ID primeiro e parava, não verificava email
+- **Impacto**: E2E tests falhavam com `duplicate key value violates unique constraint "users_email_unique"`
+
+**Correção Aplicada** (server/storage.ts):
+```typescript
+// ANTES (BUGGY):
+const existing = user.id ? await this.getUser(user.id) :
+                 user.email ? await this.getUserByEmail(user.email) : undefined;
+
+// DEPOIS (CORRIGIDO):
+let existing = user.id ? await this.getUser(user.id) : undefined;
+
+if (!existing && user.email) {
+  existing = await this.getUserByEmail(user.email);
+}
+```
+
+**Validação**: ✅ Architect aprovou | ✅ E2E test passou | ✅ Servidor estável
+
+---
+
+**2. i18n Missing: Assemblies.tsx textos hardcoded em PT**
+- **Sintoma**: Toggle PT/EN não funcionava em página /assembleias (textos fixos em português)
+- **Causa Raiz**: Componentes não usavam `t()` calls, faltavam 25+ chaves de tradução
+
+**Correção Aplicada**:
+- ✅ 25+ chaves adicionadas em `client/src/i18n.ts` (PT + EN)
+- ✅ Assemblies.tsx 100% traduzido (heading, labels, buttons, status badges)
+- ✅ ProxyDialog component usando `useTranslation` hook
+- ✅ AssemblyCard component usando `useTranslation` hook
+- ✅ Toast messages traduzidas
+
+**Chaves i18n adicionadas**:
+```typescript
+assemblies: {
+  pageTitle, subtitle, button, noAssemblies, searchPlaceholder,
+  dateTime, location, minQuorum, minutes, participants, votingItems,
+  proxy, status, viewAssembly, viewMinutes, generateMinutes, 
+  delegateVote, selectReceiver, revoke, toast.*, form.*
+}
+```
+
+**Validação**: ✅ Architect aprovou | ✅ E2E test passou | ✅ PT↔EN funcional
+
+---
+
+### 📊 Testes E2E Executados (23/10/2025)
+
+**Teste 1: Criação de Assembleia + i18n**
+- ✅ Login OIDC → Dashboard → Assembleias
+- ✅ Form criação funcional (data ISO → Date object)
+- ✅ POST /api/assemblies: 201 Created
+- ✅ Redirect e toast de sucesso
+
+**Teste 2: i18n PT↔EN Toggle em /Assembleias**
+- ✅ Textos padrão em PT: "Nova Assembleia", "Data e Hora", "Quórum Mínimo"
+- ✅ Toggle para EN funcional
+- ✅ Textos em EN: "New Assembly", "Date and Time", "Minimum Quorum"
+- ✅ localStorage persiste idioma
+
+**Teste 3: UI/UX Completo (Desktop + Mobile)**
+- ✅ Landing page pública (Hero, Missão, Serviços, Projetos)
+- ✅ Dashboard portal (cards de estatísticas, sidebar)
+- ✅ Assembleias page (lista, criação, proxy system)
+- ✅ Documentos page (58 documentos, categorias)
+- ✅ Responsividade mobile (375x667 - iPhone SE)
+- ✅ Screenshots capturados (8 full-page screenshots)
+
+📄 **Relatório Completo**: Ver `RELATORIO_UI_UX.md`
+
+---
+
+### 🎯 Status Final
+
+- ✅ **0 LSP Errors** (TypeScript 100% válido)
+- ✅ **Servidor Estável** (0 crashes após fix upsertUser)
+- ✅ **3/3 E2E Tests** passing (Assembleia Creation, i18n PT/EN, UI/UX Full)
+- ✅ **i18n 100%** em /assembleias (25+ chaves PT/EN)
+- ✅ **Responsividade** validada (desktop + mobile)
+- ✅ **Architect Review** aprovado (23/10/2025)
 
 ---
 
@@ -57,12 +149,10 @@ export const insertAssemblySchema = createInsertSchema(assemblies).omit({
 - ✅ Toast de sucesso exibido
 - ✅ CMS editors (Services, Projects, Impact) salvam e persistem dados
 
-### 🐛 Bugs Conhecidos (Minor)
-- **8 LSP type errors em server/routes.ts**: TypeScript não infere que objetos após `.parse()` satisfazem tipos completos (falsos positivos, runtime OK)
-  - Linhas afetadas: 146, 264, 395, 413, 419, 432, 510, 766
-  - Causa: Spread operator `{...data, createdBy}` após `.parse()` não é inferido corretamente
-  - Impacto: Zero (código funciona perfeitamente em runtime)
-  - Solução futura: Adicionar type assertions `as InsertX` quando necessário
+### ✅ Bugs Conhecidos (RESOLVIDOS)
+- ✅ **8 LSP type errors em server/routes.ts**: RESOLVIDOS (recompilação TypeScript automática)
+- ✅ **upsertUser duplicate key**: CORRIGIDO (23/10/2025)
+- ✅ **i18n missing em Assemblies**: CORRIGIDO (23/10/2025)
 
 ### 📊 Resultados dos Testes E2E
 - **Teste 1**: Criação de assembleia com string ISO date → ✅ PASSOU
@@ -371,9 +461,9 @@ export const insertAssemblySchema = createInsertSchema(assemblies).omit({
 
 ## 📈 Progresso Geral
 
-**Concluído**: 95% (Base + Upgrade Package + Proxies + Emails + Admin User Mgmt + Schema Fixes)  
+**Concluído**: 96% (Base + Upgrade Package + Proxies + Emails + Admin + Schemas + Deploy Fixes)  
 **Em Progresso**: 0%  
-**Pendente**: 5%
+**Pendente**: 4%
 
 ### 🎯 Próximo Marco (Milestone)
 **MVP Completo** - Estimativa: 1-2 semanas  
@@ -399,8 +489,8 @@ export const insertAssemblySchema = createInsertSchema(assemblies).omit({
 
 ---
 
-**Última revisão**: 6/10 tarefas concluídas + Schema Fixes críticos (Deploy ✓ | E2E Tests ✓ | PDFs ✓ | Proxies ✓ | Emails ✓ | Admin Users ✓ | Schemas ✓)  
-**⏰ Próximo Prazo**: 1 de Janeiro de 2026, 23:59 (faltam 71 dias)  
+**Última revisão**: 6/10 tarefas concluídas + Schema Fixes + Deploy Fixes (Deploy ✓ | E2E ✓ | PDFs ✓ | Proxies ✓ | Emails ✓ | Admin ✓ | Schemas ✓ | upsertUser ✓ | i18n ✓)  
+**⏰ Próximo Prazo**: 1 de Janeiro de 2026, 23:59 (faltam 70 dias)  
 **🎯 Data de Publicação**: 1 de Janeiro de 2026  
 **🌐 Produção**: https://pt-bureausocial.replit.app
 
@@ -408,9 +498,14 @@ export const insertAssemblySchema = createInsertSchema(assemblies).omit({
 
 ## 🔧 Notas Técnicas
 
-### ⚠️ LSP Errors Conhecidos (Não-Críticos)
-- **8 type errors em server/routes.ts** (linhas 146, 264, 395, 413, 419, 432, 510, 766)
-- **Causa**: TypeScript não infere tipos após spread de objetos validados por `.parse()`
-- **Impacto**: Zero - código funciona perfeitamente em runtime
-- **Status**: Documentado, não requer correção imediata
-- **Solução futura**: Adicionar type assertions quando refactoring
+### ✅ Qualidade do Código (23/10/2025)
+- **0 LSP Errors** - TypeScript 100% limpo
+- **0 Crashes** - Servidor estável após fix upsertUser
+- **3/3 E2E Tests** - Todos passando (Assembleia, i18n, UI/UX)
+- **Architect Reviewed** - Aprovado para deploy produção
+
+### 📄 Documentação Gerada
+- ✅ **RELATORIO_UI_UX.md** - Análise completa UI/UX com screenshots (23/10/2025)
+- ✅ **STATUS.md** - Este ficheiro (atualizado continuamente)
+- ✅ **COMANDOS.md** - Guia de comandos e i18n keys (atualizado 23/10/2025)
+- ✅ **replit.md** - Overview do projeto (atualizado 23/10/2025)
