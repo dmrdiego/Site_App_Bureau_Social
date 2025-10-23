@@ -57,7 +57,7 @@ export default function Assemblies() {
             <Link href="/assembleias/nova" data-testid="button-criar-assembleia">
               <span className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Nova Assembleia
+                {t('assemblies.new')}
               </span>
             </Link>
           </Button>
@@ -77,10 +77,10 @@ export default function Assemblies() {
           <CardContent className="text-center py-16">
             <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              Nenhuma assembleia agendada
+              {t('assemblies.noAssembliesScheduled')}
             </h3>
             <p className="text-muted-foreground">
-              As assembleias futuras aparecerão aqui
+              {t('assemblies.futureAssemblies')}
             </p>
           </CardContent>
         </Card>
@@ -103,6 +103,7 @@ interface ProxyData {
 }
 
 function ProxyDialog({ assembly }: { assembly: Assembly }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string>("");
@@ -133,13 +134,13 @@ function ProxyDialog({ assembly }: { assembly: Assembly }) {
       refetchProxies();
       setSelectedUser("");
       toast({
-        title: "Procuração criada",
-        description: "A sua procuração foi criada com sucesso",
+        title: t('assemblies.proxyCreated'),
+        description: t('assemblies.proxyCreatedSuccess'),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao criar procuração",
+        title: t('assemblies.errorCreatingProxy'),
         description: error.message,
         variant: "destructive",
       });
@@ -160,13 +161,13 @@ function ProxyDialog({ assembly }: { assembly: Assembly }) {
     onSuccess: () => {
       refetchProxies();
       toast({
-        title: "Procuração revogada",
-        description: "A sua procuração foi revogada com sucesso",
+        title: t('assemblies.proxyRevoked'),
+        description: t('assemblies.proxyRevokedSuccess'),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao revogar procuração",
+        title: t('assemblies.errorRevokingProxy'),
         description: error.message,
         variant: "destructive",
       });
@@ -178,14 +179,14 @@ function ProxyDialog({ assembly }: { assembly: Assembly }) {
       <DialogTrigger asChild>
         <Button variant="outline" data-testid={`button-procuracao-${assembly.id}`}>
           <UserCheck className="h-4 w-4 mr-2" />
-          Procuração
+          {t('assemblies.proxy')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Gerir Procuração</DialogTitle>
+          <DialogTitle>{t('assemblies.manageProxy')}</DialogTitle>
           <DialogDescription>
-            Delegue o seu voto nesta assembleia a outro associado
+            {t('assemblies.delegateVote')}
           </DialogDescription>
         </DialogHeader>
 
@@ -194,9 +195,9 @@ function ProxyDialog({ assembly }: { assembly: Assembly }) {
             <div className="p-4 border rounded-lg space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium">Procuração ativa</p>
+                  <p className="text-sm font-medium">{t('assemblies.proxyActive')}</p>
                   <p className="text-sm text-muted-foreground">
-                    Delegou o voto a: {myProxies.given.receiverName}
+                    {t('assemblies.delegatedTo')} {myProxies.given.receiverName}
                   </p>
                 </div>
                 <Button
@@ -231,7 +232,7 @@ function ProxyDialog({ assembly }: { assembly: Assembly }) {
                 className="w-full"
                 data-testid={`button-criar-procuracao-${assembly.id}`}
               >
-                {createProxy.isPending ? "A criar..." : "Criar Procuração"}
+                {createProxy.isPending ? t('assemblies.creating') : t('assemblies.createProxy')}
               </Button>
             </div>
           )}
