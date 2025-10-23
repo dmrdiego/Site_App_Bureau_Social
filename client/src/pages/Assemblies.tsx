@@ -22,15 +22,15 @@ export default function Assemblies() {
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       toast({
-        title: "Não autorizado",
-        description: "A redirecionar para login...",
+        title: t('assemblies.unauthorized'),
+        description: t('assemblies.redirectingToLogin'),
         variant: "destructive",
       });
       setTimeout(() => {
         window.location.href = "/api/login";
       }, 500);
     }
-  }, [isAuthenticated, authLoading, toast]);
+  }, [isAuthenticated, authLoading, toast, t]);
 
   const { data: assemblies, isLoading } = useQuery<Assembly[]>({
     queryKey: ["/api/assemblies"],
@@ -213,10 +213,10 @@ function ProxyDialog({ assembly }: { assembly: Assembly }) {
             </div>
           ) : (
             <div className="space-y-3">
-              <label className="text-sm font-medium">Delegar voto a:</label>
+              <label className="text-sm font-medium">{t('assemblies.delegateVoteTo')}</label>
               <Select value={selectedUser} onValueChange={setSelectedUser}>
                 <SelectTrigger data-testid={`select-user-${assembly.id}`}>
-                  <SelectValue placeholder="Selecione um associado" />
+                  <SelectValue placeholder={t('assemblies.selectMember')} />
                 </SelectTrigger>
                 <SelectContent>
                   {users?.map((user) => (
@@ -239,11 +239,11 @@ function ProxyDialog({ assembly }: { assembly: Assembly }) {
 
           {myProxies?.received && myProxies.received.length > 0 && (
             <div className="pt-4 border-t">
-              <p className="text-sm font-medium mb-2">Procurações recebidas:</p>
+              <p className="text-sm font-medium mb-2">{t('assemblies.proxiesReceived')}</p>
               <div className="space-y-2">
                 {myProxies.received.map((proxy) => (
                   <div key={proxy.id} className="p-2 bg-muted rounded text-sm" data-testid={`proxy-received-${proxy.id}`}>
-                    {proxy.giverName} delegou o voto em si
+                    {proxy.giverName} {t('assemblies.delegatedVoteToYou')}
                   </div>
                 ))}
               </div>
@@ -256,6 +256,7 @@ function ProxyDialog({ assembly }: { assembly: Assembly }) {
 }
 
 function AssemblyCard({ assembly }: { assembly: Assembly }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { isAdmin, isDirecao } = useAuth();
   const canGenerateMinutes = isAdmin || isDirecao;
@@ -278,14 +279,14 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/assemblies"] });
       toast({
-        title: "Ata gerada com sucesso",
-        description: "A ata foi gerada e está disponível para download",
+        title: t('assemblies.minutesGeneratedSuccess'),
+        description: t('assemblies.minutesGeneratedDescription'),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao gerar ata",
-        description: error.message || "Ocorreu um erro ao gerar a ata",
+        title: t('assemblies.errorGeneratingMinutes'),
+        description: error.message || t('assemblies.errorGeneratingMinutesDescription'),
         variant: "destructive",
       });
     },
@@ -300,13 +301,13 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/assemblies"] });
       toast({
-        title: "Status atualizado",
-        description: "O status da assembleia foi atualizado com sucesso",
+        title: t('assemblies.statusUpdated'),
+        description: t('assemblies.statusUpdatedSuccess'),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao atualizar",
+        title: t('assemblies.errorUpdating'),
         description: error.message,
         variant: "destructive",
       });
@@ -324,8 +325,8 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
 
   const getTypeLabel = (tipo: string) => {
     const labels = {
-      ordinaria: "Ordinária",
-      extraordinaria: "Extraordinária",
+      ordinaria: t('assemblies.ordinary'),
+      extraordinaria: t('assemblies.extraordinary'),
     };
     return labels[tipo as keyof typeof labels] || tipo;
   };
@@ -347,23 +348,23 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
               </Badge>
               {(assembly as any).votingEligibility && (
                 <Badge variant="secondary">
-                  {(assembly as any).votingEligibility === 'todos' ? 'Voto: Fundadores e Efetivos' :
-                   (assembly as any).votingEligibility === 'com_contribuintes' ? 'Voto: Fund., Efet. e Contrib.' :
-                   (assembly as any).votingEligibility === 'com_voluntarios' ? 'Voto: Fund., Efet. e Volunt.' :
-                   (assembly as any).votingEligibility === 'completa' ? 'Voto: Todos (exceto Honorários)' :
-                   'Voto: Apenas Fundadores'}
+                  {(assembly as any).votingEligibility === 'todos' ? t('assemblies.voteFoundersEffective') :
+                   (assembly as any).votingEligibility === 'com_contribuintes' ? t('assemblies.voteWithContributors') :
+                   (assembly as any).votingEligibility === 'com_voluntarios' ? t('assemblies.voteWithVolunteers') :
+                   (assembly as any).votingEligibility === 'completa' ? t('assemblies.voteComplete') :
+                   t('assemblies.voteFoundersOnly')}
                 </Badge>
               )}
               {myProxies?.given && (
                 <Badge variant="secondary" data-testid={`badge-procuracao-dada-${assembly.id}`}>
                   <UserCheck className="h-3 w-3 mr-1" />
-                  Procuração: {myProxies.given.receiverName}
+                  {t('assemblies.proxyColon')} {myProxies.given.receiverName}
                 </Badge>
               )}
               {myProxies?.received && myProxies.received.length > 0 && (
                 <Badge variant="secondary" data-testid={`badge-procuracoes-recebidas-${assembly.id}`}>
                   <Users className="h-3 w-3 mr-1" />
-                  {myProxies.received.length} {myProxies.received.length === 1 ? 'procuração' : 'procurações'}
+                  {myProxies.received.length} {myProxies.received.length === 1 ? t('assemblies.singleProxy') : t('assemblies.multipleProxies')}
                 </Badge>
               )}
             </div>
@@ -375,7 +376,7 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
           <div className="flex items-start gap-3">
             <Calendar className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div>
-              <div className="font-medium text-foreground">Data e Hora</div>
+              <div className="font-medium text-foreground">{t('assemblies.dateTime')}</div>
               <div className="text-muted-foreground">
                 {new Date(assembly.dataAssembleia).toLocaleDateString('pt-PT', {
                   weekday: 'long',
@@ -393,7 +394,7 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
             <div className="flex items-start gap-3">
               <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div>
-                <div className="font-medium text-foreground">Local</div>
+                <div className="font-medium text-foreground">{t('assemblies.location')}</div>
                 <div className="text-muted-foreground">{assembly.local}</div>
               </div>
             </div>
@@ -402,7 +403,7 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
           <div className="flex items-start gap-3">
             <Users className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div>
-              <div className="font-medium text-foreground">Quórum Mínimo</div>
+              <div className="font-medium text-foreground">{t('assemblies.minimumQuorum')}</div>
               <div className="text-muted-foreground">{assembly.quorumMinimo}%</div>
             </div>
           </div>
@@ -411,8 +412,8 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
             <div className="flex items-start gap-3">
               <FileText className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div>
-                <div className="font-medium text-foreground">Ata</div>
-                <div className="text-muted-foreground">Disponível</div>
+                <div className="font-medium text-foreground">{t('assemblies.minutes')}</div>
+                <div className="text-muted-foreground">{t('assemblies.available')}</div>
               </div>
             </div>
           )}
@@ -426,7 +427,7 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
             <Button variant="outline" asChild data-testid={`button-download-ata-${assembly.id}`}>
               <a href={`/api/assemblies/${assembly.id}/download-minutes`}>
                 <Download className="h-4 w-4 mr-2" />
-                Download Ata
+                {t('assemblies.downloadMinutes')}
               </a>
             </Button>
           )}
@@ -438,7 +439,7 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
               data-testid={`button-gerar-ata-${assembly.id}`}
             >
               <FileText className="h-4 w-4 mr-2" />
-              {generateMinutes.isPending ? 'A gerar...' : 'Gerar Ata'}
+              {generateMinutes.isPending ? t('assemblies.generating') : t('assemblies.generateMinutes')}
             </Button>
           )}
           
@@ -451,7 +452,7 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
                 data-testid={`button-editar-${assembly.id}`}
               >
                 <Link href={`/assembleias/editar/${assembly.id}`}>
-                  Editar
+                  {t('assemblies.edit')}
                 </Link>
               </Button>
               
@@ -462,7 +463,7 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
                   disabled={updateStatus.isPending}
                   data-testid={`button-iniciar-${assembly.id}`}
                 >
-                  Iniciar Assembleia
+                  {t('assemblies.startAssembly')}
                 </Button>
               )}
               
@@ -473,7 +474,7 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
                   disabled={updateStatus.isPending}
                   data-testid={`button-encerrar-${assembly.id}`}
                 >
-                  Encerrar Assembleia
+                  {t('assemblies.closeAssembly')}
                 </Button>
               )}
             </>
