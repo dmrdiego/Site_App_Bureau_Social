@@ -1102,12 +1102,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { subject, html, segmento = "todos", testePara } = req.body;
 
+      console.log('📧 Email broadcast request:', { subject, hasHtml: !!html, segmento, testePara });
+
       if (!subject || !html) {
         return res.status(400).json({ message: "Subject e HTML são obrigatórios" });
       }
 
       // Send test email only
       if (testePara) {
+        console.log('📧 Sending test email to:', testePara);
         await sendEmail({ to: testePara, subject, html });
         return res.json({ preview: true, message: "Email de teste enviado" });
       }

@@ -65,7 +65,7 @@ export default function Comunicacoes() {
     mutationFn: async ({ isTest }: { isTest: boolean }) => {
       const payload: any = {
         subject,
-        html: convertTextToHtml(html),
+        html: convertTextToHtml(html, subject),
         segmento,
       };
 
@@ -173,7 +173,7 @@ export default function Comunicacoes() {
     broadcastMutation.mutate({ isTest: false });
   };
 
-  const convertTextToHtml = (text: string): string => {
+  const convertTextToHtml = (text: string, emailSubject: string): string => {
     // Simple conversion: preserve line breaks and basic formatting
     const paragraphs = text.split('\n\n').map(p => {
       const lines = p.split('\n').join('<br>');
@@ -197,7 +197,7 @@ export default function Comunicacoes() {
         <body>
           <div class="container">
             <div class="header">
-              <h1>${subject}</h1>
+              <h1>${emailSubject}</h1>
             </div>
             <div class="content">
               ${paragraphs}
@@ -292,7 +292,7 @@ Bureau Social`);
                   </CardHeader>
                   <CardContent>
                     <iframe
-                      srcDoc={convertTextToHtml(html)}
+                      srcDoc={convertTextToHtml(html, subject)}
                       className="w-full h-96 border rounded"
                       title="Email Preview"
                     />
