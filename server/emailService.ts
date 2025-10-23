@@ -364,3 +364,101 @@ export function createQuotaPendenteEmail(
     </html>
   `;
 }
+
+export function createInstrucoesAcessoEmail(userName: string): string {
+  const portalUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'http://localhost:5000';
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #2c5aa0; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+          .highlight { background: #e7f3ff; padding: 15px; border-left: 4px solid #2c5aa0; margin: 20px 0; }
+          .steps { background: white; padding: 20px; border-radius: 4px; margin: 20px 0; }
+          .step { margin: 15px 0; padding-left: 30px; position: relative; }
+          .step::before { content: "➤"; position: absolute; left: 0; color: #2c5aa0; font-weight: bold; }
+          .button { background: #2c5aa0; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; display: inline-block; margin: 20px 0; text-align: center; }
+          .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+          .code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Bem-vindo ao Portal de Associados</h1>
+          </div>
+          <div class="content">
+            <p>Caro(a) ${userName},</p>
+            <p>Bem-vindo ao Portal de Associados do Bureau Social! Aqui estão as instruções para aceder ao sistema:</p>
+            
+            <div class="highlight">
+              <h2>🔐 Como Fazer Login</h2>
+              <p>O nosso sistema utiliza autenticação segura através do Replit. Não precisa criar uma nova senha!</p>
+            </div>
+
+            <div class="steps">
+              <h3>Passos para Aceder:</h3>
+              
+              <div class="step">
+                <strong>1. Aceda ao Portal</strong><br>
+                Clique no botão abaixo ou aceda a:<br>
+                <span class="code">${portalUrl}</span>
+              </div>
+
+              <div class="step">
+                <strong>2. Clique em "Entrar"</strong><br>
+                Na página inicial, clique no botão "Entrar" no canto superior direito.
+              </div>
+
+              <div class="step">
+                <strong>3. Autenticação Replit</strong><br>
+                Será redirecionado para fazer login com a sua conta Replit. Se ainda não tem uma conta Replit, pode criá-la gratuitamente usando o mesmo email que está registado no Bureau Social.
+              </div>
+
+              <div class="step">
+                <strong>4. Autorize o Acesso</strong><br>
+                Autorize o Portal de Associados a aceder ao seu perfil Replit. Esta é uma operação segura e única.
+              </div>
+
+              <div class="step">
+                <strong>5. Pronto!</strong><br>
+                Será redirecionado automaticamente para o seu Dashboard pessoal.
+              </div>
+            </div>
+
+            <div style="text-align: center;">
+              <a href="${portalUrl}" class="button">Aceder ao Portal Agora</a>
+            </div>
+
+            <div class="highlight">
+              <h3>📋 O Que Pode Fazer no Portal</h3>
+              <ul>
+                <li>Consultar assembleias e votar em decisões importantes</li>
+                <li>Aceder a documentos e atas</li>
+                <li>Atualizar o seu perfil</li>
+                <li>Delegar o seu voto através de procuração</li>
+                <li>Acompanhar notificações e comunicados</li>
+              </ul>
+            </div>
+
+            <p style="margin-top: 30px; font-size: 14px; color: #666;">
+              <strong>Nota:</strong> Por segurança, o seu email (${userName === 'Diego' ? 'dmrdiego@gmail.com' : 'associado@bureausocial.com.br'}) deve estar associado à sua conta Replit. 
+              Se tiver alguma dificuldade no acesso, entre em contacto connosco.
+            </p>
+          </div>
+          <div class="footer">
+            <p>Instituto Português de Negócios Sociais - Bureau Social</p>
+            <p style="font-size: 11px; color: #999;">
+              Precisa de ajuda? Responda a este email ou contacte-nos através do portal.
+            </p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}

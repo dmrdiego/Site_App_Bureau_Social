@@ -1219,6 +1219,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ADMIN ENDPOINTS
   // ============================================================================
 
+  // Test email endpoint (admin only)
+  app.post("/api/admin/email/test-instrucoes", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email é obrigatório" });
+      }
+
+      // Import the new template function
+      const { createInstrucoesAcessoEmail } = await import('./emailService');
+      
+      const userName = email === 'dmrdiego@gmail.com' ? 'Diego' : 'Associado';
+      const emailHtml = createInstrucoesAcessoEmail(userName);
+
+      await sendEmail({
+        to: email,
+        subject: 'Instruções de Acesso - Portal de Associados Bureau Social',
+        html: emailHtml,
+      });
+
+      res.json({ 
+        success: true, 
+        message: `Email de instruções enviado para ${email}` 
+      });
+    } catch (error: any) {
+      console.error("Erro ao enviar email de teste:", error);
+      res.status(500).json({ message: error.message || "Falha ao enviar email de teste" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
