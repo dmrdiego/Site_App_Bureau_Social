@@ -258,6 +258,7 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
   const { toast } = useToast();
   const { isAdmin, isDirecao } = useAuth();
   const canGenerateMinutes = isAdmin || isDirecao;
+  const [isEditing, setIsEditing] = useState(false);
 
   // Fetch proxy data for this assembly
   const { data: myProxies } = useQuery<ProxyData>({
@@ -284,6 +285,28 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
       toast({
         title: "Erro ao gerar ata",
         description: error.message || "Ocorreu um erro ao gerar a ata",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: async ({ assemblyId, status }: { assemblyId: number; status: string }) => {
+      const res = await apiRequest('PUT', `/api/assemblies/${assemblyId}`, { status });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/assemblies"] });
+      toast({
+        title: "Status atualizado",
+        description: "O status da assembleia foi atualizado com sucesso",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -407,6 +430,43 @@ function AssemblyCard({ assembly }: { assembly: Assembly }) {
               <FileText className="h-4 w-4 mr-2" />
               {generateMinutes.isPending ? 'A gerar...' : 'Gerar Ata'}
             </Button>
+          )}
+          
+          {/* Botões de Administração */}
+          {isAdmin && (
+            <>
+              <Button 
+                variant="outline" 
+                asChild
+                data-testid={`button-editar-${assembly.id}`}
+              >
+                <Link href={`/assembleias/editar/${assembly.id}`}>
+                  Editar
+                </Link>
+              </Button>
+              
+              {assembly.status === 'agendada' && (
+                <Button 
+                  variant="default"
+                  onClick={() => updateStatus.mutate({ assemblyId: assembly.id!, status: 'em_curso' })}
+                  disabled={updateStatus.isPending}
+                  data-testid={`button-iniciar-${assembly.id}`}
+                >
+                  Iniciar Assembleia
+                </Button>
+              )}
+              
+              {assembly.status === 'em_curso' && (
+                <Button 
+                  variant="destructive"
+                  onClick={() => updateStatus.mutate({ assemblyId: assembly.id!, status: 'encerrada' })}
+                  disabled={updateStatus.isPending}
+                  data-testid={`button-encerrar-${assembly.id}`}
+                >
+                  Encerrar Assembleia
+                </Button>
+              )}
+            </>
           )}
         </div>
       </CardContent>

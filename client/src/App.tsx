@@ -15,6 +15,7 @@ import Landing from "@/pages/Landing";
 import FormularioInscricao from "@/pages/FormularioInscricao";
 import Dashboard from "@/pages/Dashboard";
 import Assemblies from "@/pages/Assemblies";
+import EditarAssembleia from "@/pages/EditarAssembleia";
 import Votacoes from "@/pages/Votacoes";
 import Documentos from "@/pages/Documentos";
 import Perfil from "@/pages/Perfil";
@@ -44,6 +45,7 @@ function Router() {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/assembleias" component={Assemblies} />
           <Route path="/assembleias/nova" component={NovaAssembleia} />
+          <Route path="/assembleias/editar/:id" component={EditarAssembleia} />
           <Route path="/votacoes" component={Votacoes} />
           <Route path="/documentos" component={Documentos} />
           <Route path="/perfil" component={Perfil} />

@@ -7,9 +7,94 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Vote, Clock, CheckCircle2, XCircle, ThumbsUp, ThumbsDown, Minus } from "lucide-react";
+import { Vote, Clock, CheckCircle2, XCircle, ThumbsUp, ThumbsDown, Minus, Settings } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { VotingItem } from "@shared/schema";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+function AdminVotingControls({ item }: { item: VotingItem }) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+
+  const updateStatus = useMutation({
+    mutationFn: async (status: string) => {
+      const res = await apiRequest('PUT', `/api/voting-items/${item.id}`, { status });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/voting-items"] });
+      setOpen(false);
+      toast({
+        title: "Status atualizado",
+        description: "O status da votação foi atualizado com sucesso",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" data-testid={`button-admin-${item.id}`}>
+          <Settings className="h-4 w-4 mr-2" />
+          Gerir
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Gerir Votação</DialogTitle>
+          <DialogDescription>
+            Alterar status da votação
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium mb-2">Status atual: {item.status}</p>
+          </div>
+          <div className="flex gap-3 flex-wrap">
+            {item.status === 'pendente' && (
+              <Button 
+                onClick={() => updateStatus.mutate('aberta')}
+                disabled={updateStatus.isPending}
+                data-testid={`button-abrir-${item.id}`}
+              >
+                Abrir Votação
+              </Button>
+            )}
+            {item.status === 'aberta' && (
+              <Button 
+                variant="destructive"
+                onClick={() => updateStatus.mutate('encerrada')}
+                disabled={updateStatus.isPending}
+                data-testid={`button-encerrar-${item.id}`}
+              >
+                Encerrar Votação
+              </Button>
+            )}
+            {item.status === 'encerrada' && (
+              <Button 
+                variant="outline"
+                onClick={() => updateStatus.mutate('aberta')}
+                disabled={updateStatus.isPending}
+                data-testid={`button-reabrir-${item.id}`}
+              >
+                Reabrir Votação
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function VotingButtons({ votingItemId }: { votingItemId: number }) {
   const { toast } = useToast();
@@ -80,7 +165,7 @@ function VotingButtons({ votingItemId }: { votingItemId: number }) {
 export default function Votacoes() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, isAdmin } = useAuth();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -125,7 +210,7 @@ export default function Votacoes() {
           </h2>
           <div className="grid gap-4">
             {openItems.map((item) => (
-              <VotingItemCard key={item.id} item={item} />
+              <VotingItemCard key={item.id} item={item} isAdmin={isAdmin} />
             ))}
           </div>
         </div>
@@ -139,7 +224,7 @@ export default function Votacoes() {
           </h2>
           <div className="grid gap-4">
             {pendingItems.map((item) => (
-              <VotingItemCard key={item.id} item={item} />
+              <VotingItemCard key={item.id} item={item} isAdmin={isAdmin} />
             ))}
           </div>
         </div>
@@ -153,7 +238,7 @@ export default function Votacoes() {
           </h2>
           <div className="grid gap-4">
             {closedItems.map((item) => (
-              <VotingItemCard key={item.id} item={item} />
+              <VotingItemCard key={item.id} item={item} isAdmin={isAdmin} />
             ))}
           </div>
         </div>
@@ -178,7 +263,7 @@ export default function Votacoes() {
   );
 }
 
-function VotingItemCard({ item }: { item: VotingItem }) {
+function VotingItemCard({ item, isAdmin }: { item: VotingItem; isAdmin?: boolean }) {
   const getStatusConfig = (status: string) => {
     const configs = {
       aberta: {
@@ -214,6 +299,7 @@ function VotingItemCard({ item }: { item: VotingItem }) {
                 <StatusIcon className="h-3 w-3 mr-1" />
                 {item.status}
               </Badge>
+              {isAdmin && <AdminVotingControls item={item} />}
             </div>
             {item.tipo && (
               <Badge variant="outline" className="mt-1">

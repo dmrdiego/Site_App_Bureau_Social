@@ -400,6 +400,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/voting-items/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const item = await storage.updateVotingItem(id, req.body);
+
+      if (!item) {
+        return res.status(404).json({ message: "Voting item not found" });
+      }
+
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update voting item" });
+    }
+  });
+
   // ============================================================================
   // VOTES
   // ============================================================================
