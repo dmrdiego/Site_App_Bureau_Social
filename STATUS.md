@@ -4,6 +4,21 @@
 
 ---
 
+## 🚀 Atualização de Estado - 14/01/2026 (CONCLUÍDO)
+
+**Status**: 🟢 Done  
+**Data de Conclusão**: 14 de Janeiro de 2026, 12:00 ✓
+
+### 🔧 Funcionalidades Implementadas e Melhorias
+1.  **Sistema de Quotas**: Implementada gestão de quotas anuais (Schema, Storage, API, UI e i18n).
+2.  **Relatórios e Exportações**: Adicionada exportação CSV para Assembleias e Votos (com proteção de anonimato).
+3.  **Correção de Bug de Votação**: Sincronizadas chaves de votação no frontend para evitar falhas de submissão.
+4.  **Internacionalização (i18n)**: Tradução completa da Navegação Pública e Repositório de Documentos.
+5.  **Otimização de Performance**: Adicionados índices nas tabelas `assemblies`, `votes`, `proxies` e `voting_items`.
+6.  **Fix de Tipos**: Resolvidos erros críticos de schema (Omit/Drizzle) e rendering do React.
+
+---
+
 ## ✅ Correções Finais de Deploy - 23/10/2025 (CONCLUÍDO)
 
 **Status**: 🟢 Done  
@@ -406,10 +421,9 @@ export const insertAssemblySchema = createInsertSchema(assemblies).omit({
 ---
 
 ### 8️⃣ Sistema de Quotas
-**Status**: 🔴 To Do  
+**Status**: � Done  
 **Prioridade**: ⚡ Média  
-**Estimativa**: 4-5 horas  
-**Prazo Previsto**: 28 de Outubro de 2025, 12:00
+**Concluído em**: 14 de Janeiro de 2026, 10:00 ✓
 
 **Descrição**: Gestão de quotas anuais dos associados com controlo de pagamentos e estados.
 

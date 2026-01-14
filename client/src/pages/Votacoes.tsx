@@ -61,7 +61,7 @@ function AdminVotingControls({ item }: { item: VotingItem }) {
           </div>
           <div className="flex gap-3 flex-wrap">
             {item.status === 'pendente' && (
-              <Button 
+              <Button
                 onClick={() => updateStatus.mutate('aberta')}
                 disabled={updateStatus.isPending}
                 data-testid={`button-abrir-${item.id}`}
@@ -70,7 +70,7 @@ function AdminVotingControls({ item }: { item: VotingItem }) {
               </Button>
             )}
             {item.status === 'aberta' && (
-              <Button 
+              <Button
                 variant="destructive"
                 onClick={() => updateStatus.mutate('encerrada')}
                 disabled={updateStatus.isPending}
@@ -80,7 +80,7 @@ function AdminVotingControls({ item }: { item: VotingItem }) {
               </Button>
             )}
             {item.status === 'encerrada' && (
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => updateStatus.mutate('aberta')}
                 disabled={updateStatus.isPending}
@@ -132,7 +132,7 @@ function VotingButtons({ votingItemId }: { votingItemId: number }) {
   return (
     <div className="flex gap-3 pt-4 border-t flex-wrap">
       <Button
-        onClick={() => voteMutation.mutate('a_favor')}
+        onClick={() => voteMutation.mutate('aprovar')}
         disabled={voteMutation.isPending || hasVoted}
         variant="default"
         data-testid={`button-vote-favor-${votingItemId}`}
@@ -141,7 +141,7 @@ function VotingButtons({ votingItemId }: { votingItemId: number }) {
         A Favor
       </Button>
       <Button
-        onClick={() => voteMutation.mutate('contra')}
+        onClick={() => voteMutation.mutate('rejeitar')}
         disabled={voteMutation.isPending || hasVoted}
         variant="destructive"
         data-testid={`button-vote-contra-${votingItemId}`}
@@ -303,9 +303,9 @@ function VotingItemCard({ item, isAdmin }: { item: VotingItem; isAdmin?: boolean
             </div>
             {item.tipo && (
               <Badge variant="outline" className="mt-1">
-                {item.tipo === 'simples' ? 'Maioria Simples' : 
-                 item.tipo === 'qualificada' ? 'Maioria Qualificada (2/3)' : 
-                 'Votação Secreta'}
+                {item.tipo === 'simples' ? 'Maioria Simples' :
+                  item.tipo === 'qualificada' ? 'Maioria Qualificada (2/3)' :
+                    'Votação Secreta'}
               </Badge>
             )}
           </div>
@@ -334,7 +334,7 @@ function VotingItemCard({ item, isAdmin }: { item: VotingItem; isAdmin?: boolean
           )}
         </div>
 
-        {item.status === 'encerrada' && item.resultado && (
+        {item.status === 'encerrada' && !!item.resultado && (
           <div className="pt-4 border-t">
             <h4 className="font-medium text-foreground mb-3">Resultado:</h4>
             <ResultsDisplay resultado={item.resultado} />
@@ -351,7 +351,7 @@ function VotingItemCard({ item, isAdmin }: { item: VotingItem; isAdmin?: boolean
 
 function ResultsDisplay({ resultado }: { resultado: any }) {
   const total = (resultado.aprovar || 0) + (resultado.rejeitar || 0) + (resultado.abstencao || 0);
-  
+
   if (total === 0) {
     return <div className="text-sm text-muted-foreground">Nenhum voto registado</div>;
   }

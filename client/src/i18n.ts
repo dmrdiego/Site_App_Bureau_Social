@@ -140,6 +140,21 @@ const resources = {
         title: 'Documentos',
         subtitle: 'Acesse os documentos institucionais do Bureau Social',
         download: 'Baixar',
+        upload: 'Upload Documento',
+        search: 'Buscar',
+        searchPlaceholder: 'Buscar por título ou categoria...',
+        type: 'Tipo',
+        visibility: 'Visibilidade',
+        all: 'Todos',
+        minutes: 'Atas',
+        regulations: 'Regulamentos',
+        reports: 'Relatórios',
+        other: 'Outros Documentos',
+        noFound: 'Nenhum documento encontrado',
+        tryAdjusting: 'Tente ajustar os filtros de busca',
+        willAppear: 'Os documentos aparecerão aqui quando forem carregados',
+        delete: 'Excluir Documento',
+        confirmDelete: 'Tem certeza que deseja excluir "{{title}}"? Esta ação não pode ser desfeita.',
         categories: {
           statutes: 'Estatutos e Regulamentos',
           governance: 'Governança e Ética',
@@ -323,6 +338,20 @@ const resources = {
         active: 'Ativo',
         inactive: 'Inativo'
       },
+      // Quotas
+      quotas: {
+        title: 'Minhas Quotas',
+        subtitle: 'Acompanhe o estado das suas quotas anuais',
+        year: 'Ano',
+        amount: 'Valor',
+        status: 'Estado',
+        paidAt: 'Pago em',
+        method: 'Método',
+        pending: 'Pendente',
+        paid: 'Pago',
+        overdue: 'Em atraso',
+        noQuotas: 'Nenhum registo de quotas encontrado'
+      },
       // Admin
       admin: {
         cms: {
@@ -494,6 +523,21 @@ const resources = {
         title: 'Documents',
         subtitle: 'Access Bureau Social institutional documents',
         download: 'Download',
+        upload: 'Upload Document',
+        search: 'Search',
+        searchPlaceholder: 'Search by title or category...',
+        type: 'Type',
+        visibility: 'Visibility',
+        all: 'All',
+        minutes: 'Minutes',
+        regulations: 'Regulations',
+        reports: 'Reports',
+        other: 'Other Documents',
+        noFound: 'No documents found',
+        tryAdjusting: 'Try adjusting the search filters',
+        willAppear: 'Documents will appear here when they are uploaded',
+        delete: 'Delete Document',
+        confirmDelete: 'Are you sure you want to delete "{{title}}"? This action cannot be undone.',
         categories: {
           statutes: 'Statutes and Regulations',
           governance: 'Governance and Ethics',
@@ -676,6 +720,20 @@ const resources = {
         status: 'Status',
         active: 'Active',
         inactive: 'Inactive'
+      },
+      // Quotas
+      quotas: {
+        title: 'My Quotas',
+        subtitle: 'Track the status of your annual quotas',
+        year: 'Year',
+        amount: 'Amount',
+        status: 'Status',
+        paidAt: 'Paid at',
+        method: 'Method',
+        pending: 'Pending',
+        paid: 'Paid',
+        overdue: 'Overdue',
+        noQuotas: 'No quota records found'
       },
       // Admin
       admin: {

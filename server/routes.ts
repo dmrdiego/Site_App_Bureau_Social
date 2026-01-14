@@ -20,6 +20,7 @@ import {
   insertDocumentSchema,
   insertCmsContentSchema,
   insertProxySchema,
+  insertQuotaSchema,
 } from "@shared/schema";
 
 // Setup multer for file uploads (memory storage)
@@ -68,10 +69,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.type('html').send(`
       <h1>Bureau Social — Debug</h1>
       <pre>${JSON.stringify({
-        env: Object.keys(process.env),
-        node: process.version,
-        deps: pkg.dependencies
-      }, null, 2)}</pre>
+      env: Object.keys(process.env),
+      node: process.version,
+      deps: pkg.dependencies
+    }, null, 2)}</pre>
     `);
   });
 
@@ -445,8 +446,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user has delegated their vote via proxy
       const activeProxy = await storage.getActiveProxyForUser(votingItem.assemblyId!, userId);
       if (activeProxy) {
-        return res.status(400).json({ 
-          message: "Não pode votar porque delegou o seu voto. Revogue a procuração para poder votar." 
+        return res.status(400).json({
+          message: "Não pode votar porque delegou o seu voto. Revogue a procuração para poder votar."
         });
       }
 
@@ -631,8 +632,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "File not found" });
         }
 
-        const mimeType = document.tipo === 'pdf' 
-          ? 'application/pdf' 
+        const mimeType = document.tipo === 'pdf'
+          ? 'application/pdf'
           : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
         res.setHeader('Content-Type', mimeType);
@@ -1012,8 +1013,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ataGerada: true,
       });
 
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         document,
         message: 'Ata gerada com sucesso',
       });
@@ -1142,10 +1143,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await Promise.all(
               batch.map(async (user) => {
                 try {
-                  await sendEmail({ 
-                    to: user.email!, 
-                    subject, 
-                    html 
+                  await sendEmail({
+                    to: user.email!,
+                    subject,
+                    html
                   });
                   sentCount++;
                 } catch (error) {
@@ -1161,7 +1162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      res.json({ 
+      res.json({
         total: destinatarios.length,
         message: `Enviando emails para ${destinatarios.length} destinatários...`
       });
@@ -1226,14 +1227,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/email/test-instrucoes", requireAdmin, async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
-      
+
       if (!email) {
         return res.status(400).json({ message: "Email é obrigatório" });
       }
 
       // Import the new template function
       const { createInstrucoesAcessoEmail } = await import('./emailService');
-      
+
       const userName = email === 'dmrdiego@gmail.com' ? 'Diego' : 'Associado';
       const emailHtml = createInstrucoesAcessoEmail(userName);
 
@@ -1243,13 +1244,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
         html: emailHtml,
       });
 
-      res.json({ 
-        success: true, 
-        message: `Email de instruções enviado para ${email}` 
+      res.json({
+        success: true,
+        message: `Email de instruções enviado para ${email}`
       });
     } catch (error: any) {
       console.error("Erro ao enviar email de teste:", error);
       res.status(500).json({ message: error.message || "Falha ao enviar email de teste" });
+    }
+  });
+
+  // ============================================================================
+  // QUOTAS
+  // ============================================================================
+
+  app.get("/api/quotas", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = getUserId(req);
+      const userQuotas = await storage.getUserQuotas(userId);
+      res.json(userQuotas);
+    } catch (error) {
+      console.error("Error fetching user quotas:", error);
+      res.status(500).json({ message: "Failed to fetch quotas" });
+    }
+  });
+
+  app.get("/api/admin/quotas", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const allQuotas = await storage.getAllQuotas();
+      res.json(allQuotas);
+    } catch (error) {
+      console.error("Error fetching all quotas:", error);
+      res.status(500).json({ message: "Failed to fetch all quotas" });
+    }
+  });
+
+  app.post("/api/quotas", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const data = insertQuotaSchema.parse(req.body);
+      const quota = await storage.createQuota(data);
+      res.status(201).json(quota);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to create quota" });
+    }
+  });
+
+  app.put("/api/quotas/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const quota = await storage.updateQuota(id, req.body);
+      if (!quota) return res.status(404).json({ message: "Quota not found" });
+      res.json(quota);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update quota" });
+    }
+  });
+
+  // ============================================================================
+  // REPORTS / EXPORTS
+  // ============================================================================
+
+  app.get("/api/reports/assemblies/csv", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const assemblies = await storage.getAllAssemblies();
+      let csv = "ID;Titulo;Tipo;Data;Local;Status\n";
+      assemblies.forEach(a => {
+        csv += `${a.id};"${a.titulo}";${a.tipo};${a.dataAssembleia.toISOString()};"${a.local}";${a.status}\n`;
+      });
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename=assemblies.csv');
+      res.send(Buffer.from('\uFEFF' + csv, 'utf-8')); // Add BOM for Excel compatibility with UTF-8
+    } catch (error) {
+      console.error("Error generating assemblies report:", error);
+      res.status(500).json({ message: "Failed to generate report" });
+    }
+  });
+
+  app.get("/api/reports/votes/:itemId/csv", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const itemId = parseInt(req.params.itemId);
+      const item = await storage.getVotingItemById(itemId);
+      if (!item) return res.status(404).json({ message: "Voting item not found" });
+
+      const votes = await storage.getVotesByVotingItem(itemId);
+
+      let csv = "ID;Voto;Data;IP\n";
+      // Note: In secret votes, we should not export the UserID if we want to maintain anonymity even in exports
+      // But for audit purposes, admins might need it unless specifically requested otherwise.
+      // Based on "Garantir que nem admins vejam votos individuais" from STATUS.md:
+      const hideUser = item.tipo === 'secreta';
+
+      if (!hideUser) {
+        csv = "ID;User;Voto;Data;IP\n";
+      }
+
+      for (const v of votes) {
+        if (hideUser) {
+          csv += `${v.id};${v.voto};${v.votedAt?.toISOString()};${v.ipAddress}\n`;
+        } else {
+          csv += `${v.id};${v.userId};${v.voto};${v.votedAt?.toISOString()};${v.ipAddress}\n`;
+        }
+      }
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=votes-${itemId}.csv`);
+      res.send(Buffer.from('\uFEFF' + csv, 'utf-8'));
+    } catch (error) {
+      console.error("Error generating votes report:", error);
+      res.status(500).json({ message: "Failed to generate report" });
     }
   });
 

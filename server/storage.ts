@@ -31,6 +31,9 @@ import {
   proxies,
   type Proxy,
   type InsertProxy,
+  quotas,
+  type Quota,
+  type InsertQuota,
 } from "@shared/schema";
 import { eq, desc, and, gte, lte } from "drizzle-orm";
 
@@ -96,9 +99,37 @@ export interface IStorage {
   getProxiesReceivedByUser(assemblyId: number, receiverId: string): Promise<Proxy[]>;
   revokeProxy(id: number): Promise<Proxy | undefined>;
   checkProxyLoop(assemblyId: number, giverId: string, receiverId: string): Promise<boolean>;
+
+  // Quotas
+  getUserQuotas(userId: string): Promise<Quota[]>;
+  createQuota(quota: InsertQuota): Promise<Quota>;
+  updateQuota(id: number, data: Partial<Quota>): Promise<Quota | undefined>;
+  getAllQuotas(): Promise<Quota[]>;
 }
 
 export class DbStorage implements IStorage {
+  // Quotas
+  async getUserQuotas(userId: string): Promise<Quota[]> {
+    return await db.select().from(quotas).where(eq(quotas.userId, userId)).orderBy(desc(quotas.year));
+  }
+
+  async createQuota(quota: InsertQuota): Promise<Quota> {
+    const inserted = await db.insert(quotas).values(quota).returning();
+    return inserted[0];
+  }
+
+  async updateQuota(id: number, data: Partial<Quota>): Promise<Quota | undefined> {
+    const updated = await db
+      .update(quotas)
+      .set(data)
+      .where(eq(quotas.id, id))
+      .returning();
+    return updated[0];
+  }
+
+  async getAllQuotas(): Promise<Quota[]> {
+    return await db.select().from(quotas).orderBy(desc(quotas.year));
+  }
   // Users
   async getUser(id: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
@@ -113,7 +144,7 @@ export class DbStorage implements IStorage {
   async upsertUser(user: UpsertUser): Promise<User> {
     // Try to find existing user by ID first, then by email
     let existing = user.id ? await this.getUser(user.id) : undefined;
-    
+
     // If not found by ID but email exists, check by email  
     if (!existing && user.email) {
       existing = await this.getUserByEmail(user.email);

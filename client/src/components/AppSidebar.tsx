@@ -11,6 +11,7 @@ import {
   Edit3,
   LogOut,
   Mail,
+  CreditCard,
 } from "lucide-react";
 import {
   Sidebar,
@@ -25,26 +26,29 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logoImage from "@assets/Pt-BS_1760236872718.png";
 
 export function AppSidebar() {
+  const { t } = useTranslation();
   const [location] = useLocation();
   const { user, isAdmin, isDirecao } = useAuth();
 
   const mainItems = [
-    { title: "Dashboard", url: "/dashboard", icon: Home },
-    { title: "Assembleias", url: "/assembleias", icon: Users },
-    { title: "Votações", url: "/votacoes", icon: Vote },
-    { title: "Documentos", url: "/documentos", icon: FileText },
-    { title: "Perfil", url: "/perfil", icon: User },
+    { title: t('nav.home'), url: "/dashboard", icon: Home },
+    { title: t('assemblies.title'), url: "/assembleias", icon: Users },
+    { title: t('votes.title'), url: "/votacoes", icon: Vote },
+    { title: t('quotas.title'), url: "/quotas", icon: CreditCard },
+    { title: t('repository.title'), url: "/documentos", icon: FileText },
+    { title: t('profile.title'), url: "/perfil", icon: User },
   ];
 
   const adminItems = [
-    { title: "Gerir Associados", url: "/admin/associados", icon: UserCog },
-    { title: "Comunicações", url: "/admin/comunicacoes", icon: Mail },
-    { title: "CMS Editor", url: "/admin/cms", icon: Edit3 },
+    { title: t('admin.members.title'), url: "/admin/associados", icon: UserCog },
+    { title: t('admin.communications.title'), url: "/admin/comunicacoes", icon: Mail },
+    { title: t('admin.cms.title'), url: "/admin/cms", icon: Edit3 },
     { title: "Configurações", url: "/admin/config", icon: Settings },
   ];
 
@@ -53,9 +57,9 @@ export function AppSidebar() {
       <SidebarHeader className="p-4 border-b">
         <Link href="/dashboard" data-testid="link-sidebar-logo">
           <div className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md p-2 -m-2 cursor-pointer">
-            <img 
-              src={logoImage} 
-              alt="Bureau Social" 
+            <img
+              src={logoImage}
+              alt="Bureau Social"
               className="w-10 h-10 object-contain"
             />
             <div>

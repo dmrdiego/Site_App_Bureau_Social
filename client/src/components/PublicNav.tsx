@@ -4,9 +4,11 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
+import { useTranslation } from "react-i18next";
 import logoImage from "@assets/Pt-BS_1760236872718.png";
 
 export function PublicNav() {
+  const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -16,9 +18,9 @@ export function PublicNav() {
           {/* Logo */}
           <Link href="/" data-testid="link-home">
             <div className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-1 -ml-2 cursor-pointer">
-              <img 
-                src={logoImage} 
-                alt="Bureau Social" 
+              <img
+                src={logoImage}
+                alt="Bureau Social"
                 className="w-10 h-10 object-contain"
               />
               <div className="hidden sm:block">
@@ -32,22 +34,22 @@ export function PublicNav() {
           <div className="hidden md:flex items-center gap-1">
             <Link href="/#missao" data-testid="link-missao">
               <div className="px-3 py-2 rounded-md text-sm font-medium hover-elevate active-elevate-2 cursor-pointer">
-                Missão
+                {t('nav.about')}
               </div>
             </Link>
             <Link href="/#servicos" data-testid="link-servicos">
               <div className="px-3 py-2 rounded-md text-sm font-medium hover-elevate active-elevate-2 cursor-pointer">
-                Serviços
+                {t('nav.areas')}
               </div>
             </Link>
             <Link href="/#projetos" data-testid="link-projetos">
               <div className="px-3 py-2 rounded-md text-sm font-medium hover-elevate active-elevate-2 cursor-pointer">
-                Projetos
+                {t('nav.news')}
               </div>
             </Link>
             <Link href="/#contactos" data-testid="link-contactos">
               <div className="px-3 py-2 rounded-md text-sm font-medium hover-elevate active-elevate-2 cursor-pointer">
-                Contactos
+                {t('nav.contact')}
               </div>
             </Link>
           </div>
@@ -89,7 +91,7 @@ export function PublicNav() {
                 className="block px-3 py-2 rounded-md text-base font-medium hover-elevate active-elevate-2 cursor-pointer"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Missão
+                {t('nav.about')}
               </div>
             </Link>
             <Link href="/#servicos" data-testid="link-mobile-servicos">
@@ -97,7 +99,7 @@ export function PublicNav() {
                 className="block px-3 py-2 rounded-md text-base font-medium hover-elevate active-elevate-2 cursor-pointer"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Serviços
+                {t('nav.areas')}
               </div>
             </Link>
             <Link href="/#projetos" data-testid="link-mobile-projetos">
@@ -105,7 +107,7 @@ export function PublicNav() {
                 className="block px-3 py-2 rounded-md text-base font-medium hover-elevate active-elevate-2 cursor-pointer"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Projetos
+                {t('nav.news')}
               </div>
             </Link>
             <Link href="/#contactos" data-testid="link-mobile-contactos">
@@ -113,7 +115,7 @@ export function PublicNav() {
                 className="block px-3 py-2 rounded-md text-base font-medium hover-elevate active-elevate-2 cursor-pointer"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Contactos
+                {t('nav.contact')}
               </div>
             </Link>
             <div className="pt-2">

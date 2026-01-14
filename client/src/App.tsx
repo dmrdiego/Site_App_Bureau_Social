@@ -25,6 +25,7 @@ import NovaAssembleia from "@/pages/NovaAssembleia";
 import AdminAssociados from "@/pages/AdminAssociados";
 import Configuracoes from "@/pages/Configuracoes";
 import Comunicacoes from "@/pages/Comunicacoes";
+import Quotas from "@/pages/Quotas";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -47,6 +48,7 @@ function Router() {
           <Route path="/assembleias/nova" component={NovaAssembleia} />
           <Route path="/assembleias/editar/:id" component={EditarAssembleia} />
           <Route path="/votacoes" component={Votacoes} />
+          <Route path="/quotas" component={Quotas} />
           <Route path="/documentos" component={Documentos} />
           <Route path="/perfil" component={Perfil} />
           <Route path="/perfil/editar" component={EditarPerfil} />

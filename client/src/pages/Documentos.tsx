@@ -73,10 +73,10 @@ export default function Documentos() {
   // Filter and search documents
   const filteredDocs = documents?.filter(doc => {
     const matchesSearch = doc.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.categoria?.toLowerCase().includes(searchTerm.toLowerCase());
+      doc.categoria?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTipo = filterTipo === "todos" || doc.tipo === filterTipo;
     const matchesVisibilidade = filterVisibilidade === "todos" || doc.visivelPara === filterVisibilidade;
-    
+
     return matchesSearch && matchesTipo && matchesVisibilidade;
   }) || [];
 
@@ -97,12 +97,12 @@ export default function Documentos() {
           </p>
         </div>
         {canManage && (
-          <Button 
+          <Button
             onClick={() => setUploadDialogOpen(true)}
             data-testid="button-upload-documento"
           >
             <Upload className="h-4 w-4 mr-2" />
-            Upload Documento
+            {t('documents.upload')}
           </Button>
         )}
       </div>
@@ -132,13 +132,13 @@ export default function Documentos() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="ata">Atas</SelectItem>
-                  <SelectItem value="regulamento">Regulamentos</SelectItem>
-                  <SelectItem value="relatorio">Relatórios</SelectItem>
+                  <SelectItem value="todos">{t('documents.all')}</SelectItem>
+                  <SelectItem value="ata">{t('documents.minutes')}</SelectItem>
+                  <SelectItem value="regulamento">{t('documents.regulations')}</SelectItem>
+                  <SelectItem value="relatorio">{t('documents.reports')}</SelectItem>
                   <SelectItem value="pdf">PDF</SelectItem>
                   <SelectItem value="docx">DOCX</SelectItem>
-                  <SelectItem value="outro">Outros</SelectItem>
+                  <SelectItem value="outro">{t('documents.other')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -167,10 +167,10 @@ export default function Documentos() {
           {Object.entries(groupedDocs).map(([tipo, docs]) => (
             <div key={tipo}>
               <h2 className="text-xl font-semibold text-foreground mb-4 capitalize">
-                {tipo === 'ata' ? 'Atas' : 
-                 tipo === 'regulamento' ? 'Regulamentos' : 
-                 tipo === 'relatorio' ? 'Relatórios' : 
-                 'Outros Documentos'}
+                {tipo === 'ata' ? t('documents.minutes') :
+                  tipo === 'regulamento' ? t('documents.regulations') :
+                    tipo === 'relatorio' ? t('documents.reports') :
+                      t('documents.other')}
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {docs.map((doc) => (
@@ -185,21 +185,21 @@ export default function Documentos() {
           <CardContent className="text-center py-16">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              {searchTerm || filterTipo !== "todos" || filterVisibilidade !== "todos" 
-                ? "Nenhum documento encontrado"
-                : "Nenhum documento disponível"}
+              {searchTerm || filterTipo !== "todos" || filterVisibilidade !== "todos"
+                ? t('documents.noFound')
+                : t('repository.noDocuments')}
             </h3>
             <p className="text-muted-foreground">
               {searchTerm || filterTipo !== "todos" || filterVisibilidade !== "todos"
-                ? "Tente ajustar os filtros de busca"
-                : "Os documentos aparecerão aqui quando forem carregados"}
+                ? t('documents.tryAdjusting')
+                : t('documents.willAppear')}
             </p>
           </CardContent>
         </Card>
       )}
 
       {canManage && (
-        <UploadDialog 
+        <UploadDialog
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
         />
@@ -209,6 +209,7 @@ export default function Documentos() {
 }
 
 function DocumentCard({ document, canManage }: { document: Doc; canManage: boolean }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -219,10 +220,8 @@ function DocumentCard({ document, canManage }: { document: Doc; canManage: boole
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(`/api/documents/${document.id}`, {
-        method: 'DELETE',
-      });
-      
+      const response = await apiRequest('DELETE', `/api/documents/${document.id}`);
+
       if (!response.ok) {
         throw new Error('Falha ao excluir documento');
       }
@@ -329,9 +328,9 @@ function DocumentCard({ document, canManage }: { document: Doc; canManage: boole
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Documento</AlertDialogTitle>
+            <AlertDialogTitle>{t('documents.delete')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir "{document.titulo}"? Esta ação não pode ser desfeita.
+              {t('documents.confirmDelete', { title: document.titulo })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -350,15 +349,16 @@ function DocumentCard({ document, canManage }: { document: Doc; canManage: boole
   );
 }
 
-function EditDocumentDialog({ 
-  document, 
-  open, 
-  onOpenChange 
-}: { 
-  document: Doc; 
-  open: boolean; 
+function EditDocumentDialog({
+  document,
+  open,
+  onOpenChange
+}: {
+  document: Doc;
+  open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [titulo, setTitulo] = useState(document.titulo);
   const [tipo, setTipo] = useState(document.tipo);
@@ -367,15 +367,11 @@ function EditDocumentDialog({
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(`/api/documents/${document.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          titulo,
-          tipo,
-          categoria: categoria || null,
-          visivelPara,
-        }),
+      const response = await apiRequest('PUT', `/api/documents/${document.id}`, {
+        titulo,
+        tipo,
+        categoria: categoria || null,
+        visivelPara,
       });
 
       if (!response.ok) {
@@ -460,7 +456,7 @@ function EditDocumentDialog({
 
           <div>
             <Label htmlFor="edit-visibilidade">Visibilidade *</Label>
-            <Select value={visivelPara} onValueChange={setVisivelPara}>
+            <Select value={visivelPara || 'socios'} onValueChange={setVisivelPara}>
               <SelectTrigger id="edit-visibilidade" data-testid="select-edit-visibilidade">
                 <SelectValue />
               </SelectTrigger>
@@ -492,6 +488,7 @@ function EditDocumentDialog({
 }
 
 function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -504,7 +501,7 @@ function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
   const uploadMutation = useMutation({
     mutationFn: async () => {
       if (!selectedFile) throw new Error("Nenhum ficheiro selecionado");
-      
+
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('titulo', titulo);
@@ -597,9 +594,8 @@ function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
 
         <div className="space-y-4">
           <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              isDragging ? 'border-primary bg-primary/5' : 'border-border'
-            }`}
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isDragging ? 'border-primary bg-primary/5' : 'border-border'
+              }`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -618,7 +614,7 @@ function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                 }
               }}
             />
-            
+
             {selectedFile ? (
               <div className="flex items-center justify-center gap-3">
                 <FileText className="h-8 w-8 text-primary" />

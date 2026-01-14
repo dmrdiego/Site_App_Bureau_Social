@@ -57,11 +57,7 @@ export const users = pgTable("users", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
-export const insertUserSchema = createInsertSchema(users).omit({ 
-  id: true, 
-  createdAt: true, 
-  updatedAt: true 
-});
+export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 
 // ============================================================================
@@ -85,16 +81,16 @@ export const assemblies = pgTable("assemblies", {
   allowedCategories: jsonb("allowed_categories").default(sql`'["fundador","efetivo","contribuinte"]'::jsonb`), // Array de categorias permitidas
   createdBy: varchar("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_assemblies_status").on(table.status),
+  index("idx_assemblies_date").on(table.dataAssembleia),
+]);
 
 export type Assembly = typeof assemblies.$inferSelect;
 export type InsertAssembly = typeof assemblies.$inferInsert;
 
-export const insertAssemblySchema = createInsertSchema(assemblies).omit({ 
-  id: true, 
-  createdAt: true 
-}).extend({
-  dataAssembleia: z.union([z.string(), z.date()]).transform((val) => 
+export const insertAssemblySchema = createInsertSchema(assemblies).extend({
+  dataAssembleia: z.union([z.string(), z.date()]).transform((val) =>
     typeof val === 'string' ? new Date(val) : val
   ),
   votingEligibility: z.enum(['todos', 'com_contribuintes', 'com_voluntarios', 'completa', 'apenas_fundador']).optional(),
@@ -120,15 +116,15 @@ export const votingItems = pgTable("voting_items", {
   dataEncerramento: timestamp("data_encerramento"),
   resultado: jsonb("resultado"), // vote counts
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_voting_items_assembly").on(table.assemblyId),
+  index("idx_voting_items_status").on(table.status),
+]);
 
 export type VotingItem = typeof votingItems.$inferSelect;
 export type InsertVotingItem = typeof votingItems.$inferInsert;
 
-export const insertVotingItemSchema = createInsertSchema(votingItems).omit({ 
-  id: true, 
-  createdAt: true 
-});
+export const insertVotingItemSchema = createInsertSchema(votingItems);
 export const selectVotingItemSchema = createSelectSchema(votingItems);
 
 // ============================================================================
@@ -143,15 +139,14 @@ export const votes = pgTable("votes", {
   justificativa: text("justificativa"),
   ipAddress: varchar("ip_address", { length: 50 }),
   votedAt: timestamp("voted_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_votes_item_user").on(table.votingItemId, table.userId),
+]);
 
 export type Vote = typeof votes.$inferSelect;
 export type InsertVote = typeof votes.$inferInsert;
 
-export const insertVoteSchema = createInsertSchema(votes).omit({ 
-  id: true, 
-  createdAt: true 
-});
+export const insertVoteSchema = createInsertSchema(votes);
 export const selectVoteSchema = createSelectSchema(votes);
 
 // ============================================================================
@@ -166,15 +161,16 @@ export const proxies = pgTable("proxies", {
   status: varchar("status", { length: 20 }).default('ativa'), // ativa, revogada
   createdAt: timestamp("created_at").defaultNow(),
   revokedAt: timestamp("revoked_at"),
-});
+}, (table) => [
+  index("idx_proxies_assembly").on(table.assemblyId),
+  index("idx_proxies_giver").on(table.giverId),
+  index("idx_proxies_receiver").on(table.receiverId),
+]);
 
 export type Proxy = typeof proxies.$inferSelect;
 export type InsertProxy = typeof proxies.$inferInsert;
 
-export const insertProxySchema = createInsertSchema(proxies).omit({ 
-  id: true, 
-  createdAt: true 
-});
+export const insertProxySchema = createInsertSchema(proxies);
 export const selectProxySchema = createSelectSchema(proxies);
 
 // ============================================================================
@@ -197,11 +193,7 @@ export const documents = pgTable("documents", {
 export type Document = typeof documents.$inferSelect;
 export type InsertDocument = typeof documents.$inferInsert;
 
-export const insertDocumentSchema = createInsertSchema(documents).omit({ 
-  id: true, 
-  createdAt: true, 
-  updatedAt: true 
-});
+export const insertDocumentSchema = createInsertSchema(documents);
 export const selectDocumentSchema = createSelectSchema(documents);
 
 // ============================================================================
@@ -221,9 +213,7 @@ export const presences = pgTable("presences", {
 export type Presence = typeof presences.$inferSelect;
 export type InsertPresence = typeof presences.$inferInsert;
 
-export const insertPresenceSchema = createInsertSchema(presences).omit({ 
-  id: true 
-});
+export const insertPresenceSchema = createInsertSchema(presences);
 export const selectPresenceSchema = createSelectSchema(presences);
 
 // ============================================================================
@@ -244,10 +234,7 @@ export const notifications = pgTable("notifications", {
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
 
-export const insertNotificationSchema = createInsertSchema(notifications).omit({ 
-  id: true, 
-  createdAt: true 
-});
+export const insertNotificationSchema = createInsertSchema(notifications);
 export const selectNotificationSchema = createSelectSchema(notifications);
 
 // ============================================================================
@@ -265,11 +252,7 @@ export const cmsContent = pgTable("cms_content", {
 export type CmsContent = typeof cmsContent.$inferSelect;
 export type InsertCmsContent = typeof cmsContent.$inferInsert;
 
-export const insertCmsContentSchema = createInsertSchema(cmsContent).omit({ 
-  id: true, 
-  createdAt: true, 
-  updatedAt: true 
-});
+export const insertCmsContentSchema = createInsertSchema(cmsContent);
 export const selectCmsContentSchema = createSelectSchema(cmsContent);
 
 // ============================================================================
@@ -288,11 +271,29 @@ export const objectEntities = pgTable("object_entities", {
 export type ObjectEntity = typeof objectEntities.$inferSelect;
 export type InsertObjectEntity = typeof objectEntities.$inferInsert;
 
-export const insertObjectEntitySchema = createInsertSchema(objectEntities).omit({ 
-  id: true, 
-  createdAt: true 
-});
+export const insertObjectEntitySchema = createInsertSchema(objectEntities);
 export const selectObjectEntitySchema = createSelectSchema(objectEntities);
+
+// ============================================================================
+// QUOTAS (Quotas)
+// ============================================================================
+
+export const quotas = pgTable("quotas", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  year: integer("year").notNull(),
+  amount: varchar("amount", { length: 20 }).notNull(),
+  status: varchar("status", { length: 20 }).default('pendente'), // pendente, pago, atrasado
+  paidAt: timestamp("paid_at"),
+  paymentMethod: varchar("payment_method", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type Quota = typeof quotas.$inferSelect;
+export type InsertQuota = typeof quotas.$inferInsert;
+
+export const insertQuotaSchema = createInsertSchema(quotas);
+export const selectQuotaSchema = createSelectSchema(quotas);
 
 // ============================================================================
 // RELATIONS
