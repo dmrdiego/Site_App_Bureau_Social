@@ -9,13 +9,14 @@
 **Status**: 🟢 Done  
 **Data de Conclusão**: 14 de Janeiro de 2026, 12:00 ✓
 
-### 🔧 Funcionalidades Implementadas e Melhorias
-1.  **Sistema de Quotas**: Implementada gestão de quotas anuais (Schema, Storage, API, UI e i18n).
-2.  **Relatórios e Exportações**: Adicionada exportação CSV para Assembleias e Votos (com proteção de anonimato).
-3.  **Correção de Bug de Votação**: Sincronizadas chaves de votação no frontend para evitar falhas de submissão.
-4.  **Internacionalização (i18n)**: Tradução completa da Navegação Pública e Repositório de Documentos.
-5.  **Otimização de Performance**: Adicionados índices nas tabelas `assemblies`, `votes`, `proxies` e `voting_items`.
-6.  **Fix de Tipos**: Resolvidos erros críticos de schema (Omit/Drizzle) e rendering do React.
+7.  **Reforço do CRM e Experiência do Associado**:
+    - Novo "Member Hub" no Dashboard com estado das quotas e número de sócio.
+    - Canal direto "Fale com a Direção" para comunicação bidirecional.
+    - Repositório de Documentos com destaque para Documentos Institucionais (Estatutos/Regulamentos).
+8.  **Correções de Integridade e Performance**:
+    - Adição de `UNIQUE` constraints (votos, quotas, presenças).
+    - Otimização de queries do dashboard (limite de resultados).
+    - Proactive Voting UI (alerta de voto já registado).
 
 ---
 

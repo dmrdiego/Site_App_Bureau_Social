@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileText, Download, Upload, X, Edit2, Trash2, Search } from "lucide-react";
+import { FileText, Download, Upload, X, Edit2, Trash2, Search, ShieldCheck } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Document as Doc } from "@shared/schema";
 
@@ -80,7 +80,10 @@ export default function Documentos() {
     return matchesSearch && matchesTipo && matchesVisibilidade;
   }) || [];
 
-  const groupedDocs = filteredDocs.reduce((acc, doc) => {
+  const institutionalDocs = filteredDocs.filter(doc => doc.tipo === 'regulamento');
+  const otherDocs = filteredDocs.filter(doc => doc.tipo !== 'regulamento');
+
+  const groupedDocs = otherDocs.reduce((acc, doc) => {
     const tipo = doc.tipo || 'outros';
     if (!acc[tipo]) acc[tipo] = [];
     acc[tipo].push(doc);
@@ -163,14 +166,29 @@ export default function Documentos() {
       {isLoading ? (
         <DocumentosSkeleton />
       ) : filteredDocs.length > 0 ? (
-        <div className="space-y-8">
+        <div className="space-y-12">
+          {/* Institutional Section */}
+          {institutionalDocs.length > 0 && (
+            <div className="bg-primary/5 p-6 rounded-lg border border-primary/20 shadow-sm">
+              <h2 className="text-2xl font-bold text-primary mb-6 flex items-center gap-2">
+                <ShieldCheck className="h-6 w-6" />
+                {t('documents.institutional')}
+              </h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {institutionalDocs.map((doc) => (
+                  <DocumentCard key={doc.id} document={doc} canManage={canManage} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Other grouped documents */}
           {Object.entries(groupedDocs).map(([tipo, docs]) => (
             <div key={tipo}>
               <h2 className="text-xl font-semibold text-foreground mb-4 capitalize">
                 {tipo === 'ata' ? t('documents.minutes') :
-                  tipo === 'regulamento' ? t('documents.regulations') :
-                    tipo === 'relatorio' ? t('documents.reports') :
-                      t('documents.other')}
+                  tipo === 'relatorio' ? t('documents.reports') :
+                    t('documents.other')}
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {docs.map((doc) => (

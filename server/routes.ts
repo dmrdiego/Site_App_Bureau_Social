@@ -100,6 +100,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const documents = await storage.getAllDocuments(5);
       const notifications = await storage.getUserNotifications(getUserId(req));
 
+      // CRM: Get member quota status for current year
+      const currentYear = new Date().getFullYear();
+      const userQuotas = await storage.getUserQuotas(getUserId(req));
+      const currentQuota = userQuotas.find(q => q.year === currentYear);
+      const quotaStatus = currentQuota ? currentQuota.status : 'pendente';
+
       res.json({
         upcomingAssemblies: upcomingAssemblies.length,
         pendingVotes: openVotingItems.length,
@@ -110,6 +116,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         assemblies: upcomingAssemblies.slice(0, 3),
         votingItems: openVotingItems.slice(0, 3),
         documents: documents.slice(0, 5),
+        memberStatus: {
+          quotaStatus,
+          isRegularized: quotaStatus === 'pago',
+          quotaYear: currentYear
+        }
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch dashboard summary" });
@@ -756,6 +767,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  // ============================================================================
+  // CRM: CONTACT BOARD (Fale com a Direção)
+  // ============================================================================
+
+  app.post("/api/communications/contact-board", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { subject, message, type } = req.body;
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+
+      if (!subject || !message) {
+        return res.status(400).json({ message: "Assunto e mensagem são obrigatórios" });
+      }
+
+      // 1. Create notification for Admins
+      // Ideally we would have a way to 'getAdmins' or a specific role
+      // For now, let's assume we log it or send email.
+      // Since we don't have a direct 'Message' entity in schema, we'll send email to admin.
+
+      const adminEmail = process.env.ADMIN_EMAIL || "direcao@bureausocial.pt";
+
+      // Send email to Admin
+      await sendEmail({
+        to: adminEmail,
+        subject: `[Fale com a Direção] ${type}: ${subject}`,
+        html: `
+          <h3>Nova mensagem de associado via Portal</h3>
+          <p><strong>De:</strong> ${user?.firstName} ${user?.lastName} (${user?.email})</p>
+          <p><strong>Tipo:</strong> ${type}</p>
+          <p><strong>Assunto:</strong> ${subject}</p>
+          <hr />
+          <p>${message.replace(/\n/g, '<br>')}</p>
+        `,
+      });
+
+      res.status(200).json({ success: true, message: "Mensagem enviada com sucesso" });
+    } catch (error) {
+      console.error("Contact board error:", error);
+      res.status(500).json({ message: "Falha ao enviar mensagem" });
     }
   });
 
