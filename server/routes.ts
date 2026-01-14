@@ -96,13 +96,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const upcomingAssemblies = await storage.getUpcomingAssemblies();
       const openVotingItems = await storage.getOpenVotingItems();
-      const documents = await storage.getAllDocuments();
+      // Optimization: Fetch only 5 most recent documents
+      const documents = await storage.getAllDocuments(5);
       const notifications = await storage.getUserNotifications(getUserId(req));
 
       res.json({
         upcomingAssemblies: upcomingAssemblies.length,
         pendingVotes: openVotingItems.length,
-        recentDocuments: documents.slice(0, 5).length,
+        // Note: For total count we might need a separate count query in future, 
+        // but for now we removed the .slice() and just show what we fetched
+        recentDocuments: documents.length,
         unreadNotifications: notifications.filter(n => !n.lida).length,
         assemblies: upcomingAssemblies.slice(0, 3),
         votingItems: openVotingItems.slice(0, 3),
@@ -369,7 +372,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/voting-items", requireAuth, async (req: Request, res: Response) => {
     try {
       const votingItems = await storage.getAllVotingItems();
-      res.json(votingItems);
+
+      const userId = getUserId(req);
+      const itemsWithVoteStatus = await Promise.all(votingItems.map(async (item) => {
+        const userVote = await storage.getUserVote(item.id, userId);
+        return {
+          ...item,
+          hasVoted: !!userVote
+        };
+      }));
+
+      res.json(itemsWithVoteStatus);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch voting items" });
     }

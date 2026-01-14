@@ -12,6 +12,10 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { VotingItem } from "@shared/schema";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+// Extend type locally to include the runtime property
+type VotingItemWithStatus = VotingItem & { hasVoted?: boolean };
 
 function AdminVotingControls({ item }: { item: VotingItem }) {
   const { toast } = useToast();
@@ -96,9 +100,31 @@ function AdminVotingControls({ item }: { item: VotingItem }) {
   );
 }
 
-function VotingButtons({ votingItemId }: { votingItemId: number }) {
+function VotingButtons({ votingItemId, hasVoted }: { votingItemId: number; hasVoted?: boolean }) {
   const { toast } = useToast();
-  const [hasVoted, setHasVoted] = useState(false);
+  // If property comes from backend as true, we start as true
+  const [localVoted, setLocalVoted] = useState(hasVoted || false);
+
+  // Sync state if prop changes (e.g. after re-fetch)
+  useEffect(() => {
+    if (hasVoted !== undefined) {
+      setLocalVoted(hasVoted);
+    }
+  }, [hasVoted]);
+
+  if (localVoted) {
+    return (
+      <div className="pt-4 border-t">
+        <Alert className="bg-muted">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <AlertTitle>Voto Registado</AlertTitle>
+          <AlertDescription>
+            Já exerceu o seu direito de voto nesta votação.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   const voteMutation = useMutation({
     mutationFn: async (voto: string) => {
@@ -113,7 +139,7 @@ function VotingButtons({ votingItemId }: { votingItemId: number }) {
       return res.json();
     },
     onSuccess: () => {
-      setHasVoted(true);
+      setLocalVoted(true);
       queryClient.invalidateQueries({ queryKey: ['/api/voting-items'] });
       toast({
         title: "Voto registado com sucesso",
@@ -133,7 +159,7 @@ function VotingButtons({ votingItemId }: { votingItemId: number }) {
     <div className="flex gap-3 pt-4 border-t flex-wrap">
       <Button
         onClick={() => voteMutation.mutate('aprovar')}
-        disabled={voteMutation.isPending || hasVoted}
+        disabled={voteMutation.isPending}
         variant="default"
         data-testid={`button-vote-favor-${votingItemId}`}
       >
@@ -142,7 +168,7 @@ function VotingButtons({ votingItemId }: { votingItemId: number }) {
       </Button>
       <Button
         onClick={() => voteMutation.mutate('rejeitar')}
-        disabled={voteMutation.isPending || hasVoted}
+        disabled={voteMutation.isPending}
         variant="destructive"
         data-testid={`button-vote-contra-${votingItemId}`}
       >
@@ -151,7 +177,7 @@ function VotingButtons({ votingItemId }: { votingItemId: number }) {
       </Button>
       <Button
         onClick={() => voteMutation.mutate('abstencao')}
-        disabled={voteMutation.isPending || hasVoted}
+        disabled={voteMutation.isPending}
         variant="outline"
         data-testid={`button-vote-abstencao-${votingItemId}`}
       >
@@ -180,7 +206,7 @@ export default function Votacoes() {
     }
   }, [isAuthenticated, authLoading, toast]);
 
-  const { data: votingItems, isLoading } = useQuery<VotingItem[]>({
+  const { data: votingItems, isLoading } = useQuery<VotingItemWithStatus[]>({
     queryKey: ["/api/voting-items"],
     enabled: isAuthenticated,
   });
@@ -263,7 +289,7 @@ export default function Votacoes() {
   );
 }
 
-function VotingItemCard({ item, isAdmin }: { item: VotingItem; isAdmin?: boolean }) {
+function VotingItemCard({ item, isAdmin }: { item: VotingItemWithStatus; isAdmin?: boolean }) {
   const getStatusConfig = (status: string) => {
     const configs = {
       aberta: {
@@ -342,7 +368,7 @@ function VotingItemCard({ item, isAdmin }: { item: VotingItem; isAdmin?: boolean
         )}
 
         {item.status === 'aberta' && (
-          <VotingButtons votingItemId={item.id!} />
+          <VotingButtons votingItemId={item.id!} hasVoted={item.hasVoted} />
         )}
       </CardContent>
     </Card>

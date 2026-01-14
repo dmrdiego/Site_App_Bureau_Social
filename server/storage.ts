@@ -66,7 +66,7 @@ export interface IStorage {
   getVotesByVotingItem(votingItemId: number): Promise<Vote[]>;
 
   // Documents
-  getAllDocuments(): Promise<Document[]>;
+  getAllDocuments(limit?: number): Promise<Document[]>;
   getDocumentById(id: number): Promise<Document | undefined>;
   createDocument(document: InsertDocument): Promise<Document>;
   getDocumentsByType(type: string): Promise<Document[]>;
@@ -315,8 +315,12 @@ export class DbStorage implements IStorage {
   }
 
   // Documents
-  async getAllDocuments(): Promise<Document[]> {
-    return await db.select().from(documents).orderBy(desc(documents.createdAt));
+  async getAllDocuments(limit?: number): Promise<Document[]> {
+    const query = db.select().from(documents).orderBy(desc(documents.createdAt));
+    if (limit) {
+      return await query.limit(limit);
+    }
+    return await query;
   }
 
   async getDocumentById(id: number): Promise<Document | undefined> {

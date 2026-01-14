@@ -6,6 +6,7 @@ import { sql } from 'drizzle-orm';
 import { relations } from 'drizzle-orm';
 import {
   index,
+  uniqueIndex,
   jsonb,
   pgTable,
   timestamp,
@@ -141,6 +142,8 @@ export const votes = pgTable("votes", {
   votedAt: timestamp("voted_at").defaultNow(),
 }, (table) => [
   index("idx_votes_item_user").on(table.votingItemId, table.userId),
+  // UNIQUE constraint: User can only vote once per item
+  uniqueIndex("unique_vote_user_item").on(table.userId, table.votingItemId),
 ]);
 
 export type Vote = typeof votes.$inferSelect;
@@ -162,6 +165,19 @@ export const proxies = pgTable("proxies", {
   createdAt: timestamp("created_at").defaultNow(),
   revokedAt: timestamp("revoked_at"),
 }, (table) => [
+  index("idx_proxies_assembly").on(table.assemblyId),
+  index("idx_proxies_giver").on(table.giverId),
+  index("idx_proxies_receiver").on(table.receiverId),
+  // UNIQUE constraint: User can only give ONE proxy per assembly (conceptually)
+  // Note: We filter by status='ativa' in logic, but hard constraint prevents spam
+  // Ideally partial index where status='ativa', but Drizzle/PG support varies.
+  // Using simple constraint: A user cannot create multiple proxies for same assembly record regardless of status?
+  // No, if revoked they should be able to create new one.
+  // Limiting to logic-side check for proxies is safer if we keep history. 
+  // Let's NOT add unique constraint here if history is kept, or check if 'revoked' means new record.
+  // Looking at logic: 'revokeProxy' sets status='revoked'.
+  // If we want to allow re-issuing, we cannot force unique(giver, assembly).
+  // SKIPPING unique constraint on proxies to avoid breaking re-issuance flow.
   index("idx_proxies_assembly").on(table.assemblyId),
   index("idx_proxies_giver").on(table.giverId),
   index("idx_proxies_receiver").on(table.receiverId),
@@ -208,7 +224,10 @@ export const presences = pgTable("presences", {
   representadoPor: varchar("representado_por").references(() => users.id),
   horaEntrada: timestamp("hora_entrada"),
   horaSaida: timestamp("hora_saida"),
-});
+}, (table) => [
+  // UNIQUE constraint: User only present once per assembly
+  uniqueIndex("unique_presence_user_assembly").on(table.userId, table.assemblyId),
+]);
 
 export type Presence = typeof presences.$inferSelect;
 export type InsertPresence = typeof presences.$inferInsert;
@@ -287,7 +306,10 @@ export const quotas = pgTable("quotas", {
   paidAt: timestamp("paid_at"),
   paymentMethod: varchar("payment_method", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  // UNIQUE constraint: One quota record per user per year
+  uniqueIndex("unique_quota_user_year").on(table.userId, table.year),
+]);
 
 export type Quota = typeof quotas.$inferSelect;
 export type InsertQuota = typeof quotas.$inferInsert;
